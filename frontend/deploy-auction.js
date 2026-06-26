@@ -159,6 +159,8 @@ async function ensureFunded(address) {
     return fundViaFriendbot(address);
   }
 }
+
+function parseXlmToStroops(value) {
   const [whole, fraction = ''] = value.split('.');
   return BigInt(whole) * 10_000_000n + BigInt(fraction.padEnd(7, '0'));
 }
