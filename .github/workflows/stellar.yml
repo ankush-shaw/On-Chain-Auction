@@ -23,6 +23,7 @@ jobs:
           echo "$HOME/.stellar-cli/bin" >> $GITHUB_PATH
 
       - name: Build Contract
-        run: |
-          cd contracts/quiz-contract
-          cargo build --target wasm32-unknown-unknown --release
+        run: cargo build --target wasm32-unknown-unknown --release -p auction-contract
+
+      - name: Verify WASM exists
+        run: ls -l target/wasm32-unknown-unknown/release/auction_contract.wasm
