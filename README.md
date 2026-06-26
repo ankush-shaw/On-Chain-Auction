@@ -1,115 +1,187 @@
-# OnChainAuction
+# 🔨 OnChainAuction
 
-OnChainAuction is a Stellar Soroban project auction platform. A project manager lists a project, public users connect a wallet, bidders submit XLM-backed bids, and the auction can be settled on-chain after the deadline so the highest bidder wins.
+A decentralized project auction platform built on **Stellar** using **Soroban** smart contracts. Project managers list their projects on-chain, bidders connect their wallets and place XLM-backed bids, and the contract autonomously settles the auction — awarding the project to the highest bidder after the deadline.
 
-## What Changed
+Built as part of the **Rise In Build on Stellar** monthly challenge.
 
-- Replaced the previous quiz contract with an auction contract.
-- Rebuilt the React frontend as an auction marketplace.
-- Kept the existing multi-wallet integration for Freighter, Albedo, xBull, and Hana.
-- Added manager listing, public bidding, winner settlement, and project-board views.
+---
 
-## Tech Stack
+## 🌐 Live Demo
 
-- Frontend: React, TypeScript, Vite, Tailwind CSS, Framer Motion
-- Blockchain: Stellar Testnet, Soroban SDK
-- Wallets: Freighter, Albedo, xBull, Hana
-- Contract: Rust compiled to WebAssembly
+> Deploy your own instance using the steps below, or connect to testnet with your Freighter/Albedo/xBull/Hana wallet.
 
-## Contract API
+---
 
-The contract lives in `contracts/auction-contract`.
+## ✨ Features
+
+- 📋 **Project Listing** — Managers create auctions with a title, description, starting bid, and duration
+- 💸 **XLM-Backed Bidding** — Bids are transferred to the contract; previous highest bidder is automatically refunded
+- 🏆 **On-Chain Settlement** — Winning bid is sent to the seller trustlessly after the deadline
+- 👛 **Multi-Wallet Support** — Freighter, Albedo, xBull, and Hana
+- 📊 **Project Board View** — Browse all active and past auctions
+- ⚡ **Preview Mode** — Frontend renders sample listings without a deployed contract
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technologies |
+|---|---|
+| **Frontend** | React, TypeScript, Vite, Tailwind CSS, Framer Motion |
+| **Blockchain** | Stellar Testnet, Soroban SDK |
+| **Smart Contract** | Rust → WebAssembly |
+| **Wallets** | Freighter, Albedo, xBull, Hana |
+| **CI/CD** | GitHub Actions |
+
+---
+
+## 📁 Project Structure
+On-Chain-Auction/
+
+├── contracts/
+
+│   └── auction-contract/     # Soroban smart contract (Rust)
+
+├── frontend/                 # React + Vite frontend
+
+│   └── .env                  # Environment config (see below)
+
+├── .github/workflows/        # GitHub Actions
+
+├── Cargo.toml
+
+└── Cargo.lock
+
+---
+
+## 📜 Contract API
+
+The smart contract lives in `contracts/auction-contract`.
 
 | Function | Description |
-| --- | --- |
-| `create_auction` | Creates a project auction with seller, token, title, description, starting bid, and duration. |
-| `get_auction` | Reads one auction by ID. |
-| `get_auction_count` | Returns the highest auction ID currently stored. |
-| `place_bid` | Transfers a bid from the bidder to the contract and refunds the previous highest bidder. |
-| `settle_auction` | Sends the winning bid to the seller after the auction ends. |
+|---|---|
+| `create_auction` | Creates a project auction with seller, token, title, description, starting bid, and duration |
+| `get_auction` | Reads one auction by ID |
+| `get_auction_count` | Returns the highest auction ID currently stored |
+| `place_bid` | Transfers bid from bidder to contract; refunds the previous highest bidder |
+| `settle_auction` | Sends the winning bid to the seller after the auction ends |
 
-## Local Development
+---
 
-Install frontend dependencies:
+## ⚙️ Local Development
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) (v18+)
+- [Rust](https://www.rust-lang.org/tools/install) with `wasm32` target
+- [Stellar CLI](https://developers.stellar.org/docs/build/smart-contracts/getting-started/setup)
+
+### Frontend
 
 ```bash
 cd frontend
 npm install
-```
-
-Run the frontend:
-
-```bash
 npm run dev
 ```
 
-Run contract tests:
+### Run Contract Tests
 
 ```bash
 cargo test -p auction-contract
 ```
 
-Build the frontend:
+### Build Frontend
 
 ```bash
 cd frontend
 npm run build
 ```
 
-## Environment
+---
 
-The frontend can render preview listings without a deployed contract. Real on-chain listing, bidding, and settlement require a deployed Soroban contract ID.
+## 🌍 Environment Setup
 
-Create `frontend/.env`:
+Create a `frontend/.env` file:
 
-```bash
+```env
 VITE_AUCTION_CONTRACT_ID=YOUR_DEPLOYED_CONTRACT_ID
 VITE_STELLAR_RPC_URL=https://soroban-testnet.stellar.org
 VITE_NATIVE_TOKEN_CONTRACT_ID=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC
 ```
 
-## Deployment Notes
+> The frontend works in preview mode without a contract ID. Real bidding and settlement require a deployed contract.
 
-Build the contract from the repository root:
+---
+
+## 🚀 Deployment
+
+### 1. Build the Contract
+
+From the repository root:
 
 ```bash
 stellar contract build --package auction-contract
 ```
 
-Deploy to testnet and seed sample auctions from the `frontend` folder. The deploy script will build the WASM automatically if it is missing. Expect **2–5 minutes** on testnet (upload, deploy, and 3 sample auctions).
+### 2. Deploy to Testnet
 
-For a faster deploy without sample listings:
-
-```powershell
-$env:SKIP_SEED="1"
-npm run deploy:contract
-```
+From the `frontend` folder (auto-builds WASM if missing, seeds 3 sample auctions):
 
 ```bash
-cd frontend
 npm run deploy:contract
 ```
 
-If Stellar Friendbot is down, fund a testnet account at [Stellar Lab](https://lab.stellar.org/account/create/testnet), then deploy with your funded **secret key** (starts with `S`, not the public `G` address):
+> ⏱️ Expect **2–5 minutes** on testnet (upload + deploy + sample auctions).
 
-```powershell
+### Deploy Without Sample Listings
+
+```bash
+# Windows (PowerShell)
+$env:SKIP_SEED="1"
+npm run deploy:contract
+
+# Linux / macOS
+SKIP_SEED=1 npm run deploy:contract
+```
+
+### Deploy with a Funded Secret Key
+
+If Stellar Friendbot is down, create a testnet account at [Stellar Lab](https://lab.stellar.org/account/create/testnet), then:
+
+```bash
+# Windows (PowerShell)
 $env:DEPLOY_SECRET_KEY="SXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 npm run deploy:contract
-```
 
-To use Friendbot instead of a saved secret, clear the variable first:
-
-```powershell
+# To revert to Friendbot
 Remove-Item Env:DEPLOY_SECRET_KEY
 npm run deploy:contract
 ```
 
-Or deploy manually with the Stellar CLI, then put the returned contract ID into `frontend/.env` as `VITE_AUCTION_CONTRACT_ID`.
+### 3. Set Contract ID
 
-## Repository
+Copy the returned contract ID into `frontend/.env` as `VITE_AUCTION_CONTRACT_ID`.
 
-Target GitHub repository:
+---
 
-[ankush-shaw/On-Chain-Auction](https://github.com/ankush-shaw/On-Chain-Auction)
+## 🧪 Tests
 
-Pushes are intentionally manual-confirmed. Do not push without explicit approval.
+```bash
+cargo test -p auction-contract
+```
+
+![Tests passing](./cargo_test_success.png)
+
+---
+
+## 🔗 Links
+
+- 🐙 **GitHub:** [ankush-shaw/On-Chain-Auction](https://github.com/ankush-shaw/On-Chain-Auction)
+- 🌐 **Stellar Testnet Explorer:** [stellar.expert/explorer/testnet](https://stellar.expert/explorer/testnet)
+- 📚 **Soroban Docs:** [developers.stellar.org/docs/build/smart-contracts](https://developers.stellar.org/docs/build/smart-contracts)
+
+---
+
+## 📄 License
+
+This project is open source. See [LICENSE](./LICENSE) for details.
