@@ -24,6 +24,16 @@ const WASM_CANDIDATES = [
   path.join(PROJECT_ROOT, 'target/wasm32-unknown-unknown/release/auction_contract.wasm'),
 ];
 const ENV_PATH = path.resolve(__dirname, '.env');
+const FRIENDBOT_ENDPOINTS = [
+  'https://friendbot.stellar.org',
+  'https://horizon-testnet.stellar.org/friendbot',
+];
+const FUNDING_HELP = [
+  'Testnet Friendbot appears to be unavailable right now.',
+  'Fund a testnet account manually at https://lab.stellar.org/account/create/testnet',
+  'Then rerun deploy with your funded secret:',
+  '  $env:DEPLOY_SECRET_KEY="S..."; npm run deploy:contract',
+].join('\n');
 
 const SAMPLE_AUCTIONS = [
   {
@@ -82,7 +92,73 @@ function resolveWasmPath() {
   );
 }
 
-function parseXlmToStroops(value) {
+function loadDeployKeypair() {
+  const secret = process.env.DEPLOY_SECRET_KEY?.trim();
+  if (secret) {
+    const kp = Keypair.fromSecret(secret);
+    console.log('Using deploy account from DEPLOY_SECRET_KEY:', kp.publicKey());
+    return kp;
+  }
+
+  const kp = Keypair.random();
+  console.log('Deployer:', kp.publicKey());
+  console.log('Secret (save if you need to reuse this account):', kp.secret());
+  return kp;
+}
+
+async function waitForAccount(address, attempts = 15) {
+  for (let i = 0; i < attempts; i += 1) {
+    try {
+      return await server.getAccount(address);
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
+  }
+  throw new Error(`Timed out waiting for account ${address} to be funded.\n${FUNDING_HELP}`);
+}
+
+async function fundViaFriendbot(address) {
+  let lastError = 'No Friendbot response';
+
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    for (const endpoint of FRIENDBOT_ENDPOINTS) {
+      const url = `${endpoint}?addr=${encodeURIComponent(address)}`;
+      try {
+        const response = await fetch(url, { redirect: 'follow' });
+        const body = await response.text();
+
+        if (response.ok) {
+          console.log(`Funded via ${endpoint}`);
+          return waitForAccount(address);
+        }
+
+        lastError = `${endpoint} returned ${response.status}${body ? `: ${body.slice(0, 160)}` : ''}`;
+        console.warn(lastError);
+      } catch (error) {
+        lastError = `${endpoint} failed: ${error.message}`;
+        console.warn(lastError);
+      }
+    }
+
+    if (attempt < 5) {
+      console.log(`Friendbot retry ${attempt}/5 in 3s...`);
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+    }
+  }
+
+  throw new Error(`Friendbot funding failed after retries.\nLast error: ${lastError}\n${FUNDING_HELP}`);
+}
+
+async function ensureFunded(address) {
+  try {
+    const account = await server.getAccount(address);
+    console.log('Deploy account is already funded.');
+    return account;
+  } catch {
+    console.log('Funding via Friendbot...');
+    return fundViaFriendbot(address);
+  }
+}
   const [whole, fraction = ''] = value.split('.');
   return BigInt(whole) * 10_000_000n + BigInt(fraction.padEnd(7, '0'));
 }
@@ -135,17 +211,9 @@ async function deployAndSeed() {
   const wasmPath = resolveWasmPath();
   console.log('Using WASM:', wasmPath);
 
-  const kp = Keypair.random();
+  const kp = loadDeployKeypair();
   const addressStr = kp.publicKey();
-  console.log('Deployer:', addressStr);
-  console.log('Secret (save if you need to reuse this account):', kp.secret());
-
-  console.log('Funding via Friendbot...');
-  const fund = await fetch(`https://friendbot.stellar.org/?addr=${addressStr}`);
-  if (!fund.ok) throw new Error('Friendbot funding failed');
-  await new Promise((resolve) => setTimeout(resolve, 5000));
-
-  let account = await server.getAccount(addressStr);
+  let account = await ensureFunded(addressStr);
   const wasm = fs.readFileSync(wasmPath);
 
   console.log('Uploading WASM...');

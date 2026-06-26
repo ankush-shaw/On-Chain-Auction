@@ -83,6 +83,13 @@ cd frontend
 npm run deploy:contract
 ```
 
+If Stellar Friendbot is down, fund a testnet account at [Stellar Lab](https://lab.stellar.org/account/create/testnet), then deploy with your funded secret:
+
+```powershell
+$env:DEPLOY_SECRET_KEY="YOUR_TESTNET_SECRET"
+npm run deploy:contract
+```
+
 Or deploy manually with the Stellar CLI, then put the returned contract ID into `frontend/.env` as `VITE_AUCTION_CONTRACT_ID`.
 
 ## Repository
