@@ -4,7 +4,7 @@ import type { WalletType } from '../services/soroban';
 import type { WalletState } from '../types';
 
 /**
- * Custom hook for managing multi-wallet state (Freighter / Albedo / xBull / Hana)
+ * Custom hook for managing multi-wallet state (Freighter / Albedo / xBull / Hana).
  */
 export function useWallet() {
   const [wallet, setWallet] = useState<WalletState>({

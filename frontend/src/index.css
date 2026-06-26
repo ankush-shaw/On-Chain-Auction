@@ -15,26 +15,47 @@
 
 @layer components {
   .glass {
-    @apply bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl;
+    @apply rounded-lg border border-slate-800 bg-slate-950/80;
   }
 
   .btn-primary {
-    @apply bg-brand-600 hover:bg-brand-500 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2;
+    @apply flex items-center gap-2 rounded-md bg-cyan-500 px-5 py-3 text-sm font-semibold text-slate-950 transition-all duration-200 hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn-ghost {
-    @apply bg-white/5 hover:bg-white/10 text-slate-300 font-medium px-6 py-3 rounded-xl transition-all duration-200 border border-white/10 flex items-center gap-2;
+    @apply flex items-center gap-2 rounded-md border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-medium text-slate-200 transition-all duration-200 hover:border-slate-500 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50;
   }
 
-  .answer-option {
-    @apply w-full text-left p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-brand-500/50 transition-all duration-200 font-medium text-slate-200;
+  .stable-button {
+    min-height: 44px;
+    white-space: nowrap;
   }
 
-  .answer-correct {
-    @apply border-green-500 bg-green-500/20 text-green-300;
+  .metric {
+    @apply rounded-lg border border-slate-800 bg-slate-900 p-4;
   }
 
-  .answer-wrong {
-    @apply border-red-500 bg-red-500/20 text-red-300;
+  .metric p {
+    @apply text-2xl font-black text-white;
+  }
+
+  .metric span {
+    @apply mt-1 block text-xs font-semibold uppercase tracking-wide text-slate-500;
+  }
+
+  .status-dot {
+    @apply h-2.5 w-2.5 rounded-full;
+  }
+
+  .status-dot.live {
+    @apply bg-emerald-400 shadow-[0_0_16px_rgba(52,211,153,0.8)];
+  }
+
+  .status-dot.ended {
+    @apply bg-amber-400;
+  }
+
+  .status-dot.settled {
+    @apply bg-slate-500;
   }
 }

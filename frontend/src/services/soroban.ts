@@ -1,104 +1,59 @@
 declare module '@stellar/freighter-api';
 
-/**
- * Soroban Service — handles all interactions with the Stellar network
- * Contract ID: CCATST7MXGZQWB6HQCHDLUKUZA6MVK4KIGCDFVQ34COE543GTINOK3BL
- */
 import {
+  Address,
+  BASE_FEE,
   Contract,
-  rpc,
   Networks,
   TransactionBuilder,
-  BASE_FEE,
-  Address,
-  scValToNative,
   nativeToScVal,
+  rpc,
+  scValToNative,
 } from '@stellar/stellar-sdk';
-import quizData from '../data/questions.json';
 import { requestAccess, signTransaction } from '@stellar/freighter-api';
 import albedo from '@albedo-link/intent';
+import type { AuctionListing, AuctionStatus } from '../types';
 
-// ─── Config ───────────────────────────────────────────────────────────────────
-
-export const CONTRACT_ID = 'CDMMSDM3KSHC5FBN2SIZYOH3FLT5ICAHHNYYCCEB7UFZZ3KMBT44OI4E';
+export const CONTRACT_ID = import.meta.env.VITE_AUCTION_CONTRACT_ID ?? '';
 export const NETWORK_PASSPHRASE = Networks.TESTNET;
-export const RPC_URL = 'https://soroban-testnet.stellar.org';
-export const NATIVE_TOKEN = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
-
-/**
- * Pay the entry fee for the quiz (1 XLM)
- * This uses an inter-contract call to the Native XLM Token contract.
- */
-export async function payEntryFee(userAddress: string): Promise<boolean> {
-  try {
-    const account = await server.getAccount(userAddress);
-    
-    // Amount in stroops (1.0 XLM = 10,000,000 stroops)
-    const amount = '10000000';
-
-    const tx = new TransactionBuilder(account, {
-      fee: '1000000',
-      networkPassphrase: NETWORK_PASSPHRASE,
-    })
-      .addOperation(
-        quizContract.call(
-          'pay_entry_fee',
-          Address.fromString(userAddress).toScVal(),
-          Address.fromString(NATIVE_TOKEN).toScVal(),
-          nativeToScVal(amount, { type: 'i128' })
-        )
-      )
-      .setTimeout(30)
-      .build();
-
-    const prepared = await server.prepareTransaction(tx);
-    
-    const signedXdr = await signTx(prepared.toXDR());
-
-    if (!signedXdr) return false;
-
-    const sent = await server.sendTransaction(TransactionBuilder.fromXDR(signedXdr, NETWORK_PASSPHRASE));
-    
-    // Wait for confirmation
-    for (let i = 0; i < 30; i++) {
-      const res = await fetch(RPC_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jsonrpc: '2.0', id: 1,
-          method: 'getTransaction',
-          params: { hash: (sent as any).hash }
-        }),
-      });
-      const json = await res.json();
-      if (json.result?.status === 'SUCCESS') return true;
-      if (json.result?.status === 'FAILED') return false;
-      await new Promise(r => setTimeout(r, 2000));
-    }
-    return false;
-  } catch (e: any) {
-    console.error('Entry fee payment failed:', e);
-    // Return a more descriptive error if possible
-    throw new Error(e.message || 'Payment failed. Please check your XLM balance and try again.');
-  }
-}
+export const RPC_URL = import.meta.env.VITE_STELLAR_RPC_URL ?? 'https://soroban-testnet.stellar.org';
+export const NATIVE_TOKEN =
+  import.meta.env.VITE_NATIVE_TOKEN_CONTRACT_ID ??
+  'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
 
 const server = new rpc.Server(RPC_URL);
-const quizContract = new Contract(CONTRACT_ID);
-
-console.log('--- DECENTRALIZED QUIZ APP v3.0.0 ---');
-
-// ─── Wallet ────────────────────────────────────────────────────────────────────
 
 export type WalletType = 'freighter' | 'albedo' | 'xbull' | 'hana';
 
-/**
- * Connect to a wallet (Freighter, Albedo, xBull, or Hana) and return the user's public key
- */
+export type CreateAuctionInput = {
+  sellerAddress: string;
+  title: string;
+  description: string;
+  startingBidXlm: string;
+  durationHours: number;
+};
+
+export type PlaceBidInput = {
+  bidderAddress: string;
+  auctionId: number;
+  amountXlm: string;
+};
+
+export function isContractConfigured() {
+  return CONTRACT_ID.length > 0;
+}
+
+function getAuctionContract() {
+  if (!isContractConfigured()) {
+    throw new Error('Auction contract is not configured. Set VITE_AUCTION_CONTRACT_ID after deploying the contract.');
+  }
+  return new Contract(CONTRACT_ID);
+}
+
 export async function connectWallet(type: WalletType = 'freighter'): Promise<string | null> {
   try {
     if (type === 'albedo') {
-      const res = await albedo.publicKey({ token: 'quiz-app-' + Math.random() });
+      const res = await albedo.publicKey({ token: 'onchain-auction-' + Math.random() });
       return res.pubkey;
     }
 
@@ -120,7 +75,6 @@ export async function connectWallet(type: WalletType = 'freighter'): Promise<str
       return response || null;
     }
 
-    // Freighter (default)
     const result = await requestAccess();
     if (typeof result === 'string') return result || null;
     if (result && typeof result === 'object' && 'address' in result) {
@@ -134,39 +88,29 @@ export async function connectWallet(type: WalletType = 'freighter'): Promise<str
   }
 }
 
-/**
- * Check if the specified wallet is installed/available.
- */
 export function isWalletInstalled(type: WalletType): boolean {
   if (typeof window === 'undefined') return false;
-  if (type === 'albedo') return true; // Albedo is a web-based popup
+  if (type === 'albedo') return true;
   if (type === 'xbull') return !!(window as any).xBullSDK;
   if (type === 'hana') return !!(window as any).hanaWallet?.stellar;
   return (
     'freighterApi' in window ||
     'freighter' in window ||
-    (typeof (window as any).__freighter !== 'undefined')
+    typeof (window as any).__freighter !== 'undefined'
   );
 }
 
-/**
- * Internal helper to sign with xBull Wallet
- */
 async function signWithXBull(xdr: string): Promise<string | null> {
   try {
     const xBull = (window as any).xBullSDK;
     if (!xBull) return null;
-    const result = await xBull.signXDR(xdr);
-    return result || null;
+    return await xBull.signXDR(xdr);
   } catch (e) {
     console.error('[signWithXBull] Error:', e);
     return null;
   }
 }
 
-/**
- * Internal helper to sign with Hana Wallet
- */
 async function signWithHana(xdr: string): Promise<string | null> {
   try {
     const hana = (window as any).hanaWallet?.stellar;
@@ -179,9 +123,15 @@ async function signWithHana(xdr: string): Promise<string | null> {
   }
 }
 
-/**
- * Unified transaction signer — routes to the correct wallet based on localStorage.
- */
+async function signWithAlbedo(xdr: string): Promise<string | null> {
+  try {
+    const res = await albedo.tx({ xdr, network: 'testnet' });
+    return res.signed_envelope_xdr;
+  } catch {
+    return null;
+  }
+}
+
 async function signTx(preparedXdr: string): Promise<string | null> {
   const walletType = localStorage.getItem('walletType') as WalletType | null;
 
@@ -189,7 +139,6 @@ async function signTx(preparedXdr: string): Promise<string | null> {
   if (walletType === 'xbull') return signWithXBull(preparedXdr);
   if (walletType === 'hana') return signWithHana(preparedXdr);
 
-  // Default: Freighter
   const signResult = await signTransaction(preparedXdr, { network: 'TESTNET' });
   if (typeof signResult === 'object' && signResult !== null && 'error' in signResult) {
     console.error('[signTx] Freighter error:', (signResult as any).error);
@@ -198,21 +147,6 @@ async function signTx(preparedXdr: string): Promise<string | null> {
   return typeof signResult === 'string' ? signResult : (signResult as any)?.signedTxXdr ?? null;
 }
 
-/**
- * Internal helper to sign with Albedo
- */
-async function signWithAlbedo(xdr: string): Promise<string | null> {
-  try {
-    const res = await albedo.tx({ xdr, network: 'testnet' });
-    return res.signed_envelope_xdr;
-  } catch (e) {
-    return null;
-  }
-}
-
-/**
- * Fetches the XLM balance for a given address from Horizon
- */
 export async function getXlmBalance(address: string): Promise<string | null> {
   try {
     const response = await fetch(`https://horizon-testnet.stellar.org/accounts/${address}`);
@@ -220,53 +154,100 @@ export async function getXlmBalance(address: string): Promise<string | null> {
     const data = await response.json();
     const nativeBalance = data.balances.find((b: any) => b.asset_type === 'native');
     return nativeBalance ? parseFloat(nativeBalance.balance).toFixed(2) : '0.00';
-  } catch (e) {
-    return null;
-  }
-}
-
-// ─── Read Functions ───────────────────────────────────────────────────────────
-
-/**
- * The contract is pre-seeded with 15 questions.
- * Returns 15 so the UI skips the "Seed Now" prompt.
- */
-export async function getTotalQuizzes(): Promise<number> {
-  try {
-    const res = await simulateCall('get_total_quizzes', []);
-    return typeof res === 'number' ? res : 0;
-  } catch {
-    return 0;
-  }
-}
-
-/**
- * Fetches a question string from the contract by ID
- */
-export async function getQuestion(id: number): Promise<string | null> {
-  try {
-    const res = await simulateCall('get_question', [nativeToScVal(id, { type: 'u32' })]);
-    return res ? String(res) : null;
   } catch {
     return null;
   }
 }
 
-/**
- * Fetches the score for a user address from the contract
- */
-export async function getScore(userAddress: string): Promise<number> {
-  try {
-    const res = await simulateCall('get_score', [
-      Address.fromString(userAddress).toScVal(),
-    ]);
-    return typeof res === 'number' ? res : 0;
-  } catch {
-    return 0;
+export async function loadAuctions(): Promise<AuctionListing[]> {
+  if (!isContractConfigured()) return [];
+
+  const count = await simulateCall('get_auction_count', []);
+  const maxId = typeof count === 'number' ? count : 0;
+  const auctions: AuctionListing[] = [];
+
+  for (let id = 1; id <= maxId; id += 1) {
+    const value = await simulateCall('get_auction', [nativeToScVal(id, { type: 'u32' })]);
+    const listing = normalizeAuction(value);
+    if (listing) auctions.push(listing);
   }
+
+  return auctions.sort((a, b) => b.id - a.id);
 }
 
-/** Helper for simulation (READ operations) */
+export async function createAuction(input: CreateAuctionInput): Promise<AuctionListing | null> {
+  const id = Date.now() % 2_000_000_000;
+  const startingBid = parseXlmToStroops(input.startingBidXlm);
+  const durationSeconds = Math.max(1, Math.round(input.durationHours * 60 * 60));
+  const contract = getAuctionContract();
+  const account = await server.getAccount(input.sellerAddress);
+
+  const tx = new TransactionBuilder(account, {
+    fee: '1000000',
+    networkPassphrase: NETWORK_PASSPHRASE,
+  })
+    .addOperation(
+      contract.call(
+        'create_auction',
+        Address.fromString(input.sellerAddress).toScVal(),
+        Address.fromString(NATIVE_TOKEN).toScVal(),
+        nativeToScVal(id, { type: 'u32' }),
+        nativeToScVal(input.title, { type: 'string' }),
+        nativeToScVal(input.description, { type: 'string' }),
+        nativeToScVal(startingBid.toString(), { type: 'i128' }),
+        nativeToScVal(durationSeconds, { type: 'u64' })
+      )
+    )
+    .setTimeout(30)
+    .build();
+
+  await submitSignedTransaction(tx);
+  const created = await simulateCall('get_auction', [nativeToScVal(id, { type: 'u32' })]);
+  return normalizeAuction(created);
+}
+
+export async function placeBid(input: PlaceBidInput): Promise<AuctionListing | null> {
+  const amount = parseXlmToStroops(input.amountXlm);
+  const contract = getAuctionContract();
+  const account = await server.getAccount(input.bidderAddress);
+
+  const tx = new TransactionBuilder(account, {
+    fee: '1000000',
+    networkPassphrase: NETWORK_PASSPHRASE,
+  })
+    .addOperation(
+      contract.call(
+        'place_bid',
+        Address.fromString(input.bidderAddress).toScVal(),
+        nativeToScVal(input.auctionId, { type: 'u32' }),
+        nativeToScVal(amount.toString(), { type: 'i128' })
+      )
+    )
+    .setTimeout(30)
+    .build();
+
+  await submitSignedTransaction(tx);
+  const updated = await simulateCall('get_auction', [nativeToScVal(input.auctionId, { type: 'u32' })]);
+  return normalizeAuction(updated);
+}
+
+export async function settleAuction(auctionId: number, callerAddress: string): Promise<AuctionListing | null> {
+  const contract = getAuctionContract();
+  const account = await server.getAccount(callerAddress);
+
+  const tx = new TransactionBuilder(account, {
+    fee: '1000000',
+    networkPassphrase: NETWORK_PASSPHRASE,
+  })
+    .addOperation(contract.call('settle_auction', nativeToScVal(auctionId, { type: 'u32' })))
+    .setTimeout(30)
+    .build();
+
+  await submitSignedTransaction(tx);
+  const settled = await simulateCall('get_auction', [nativeToScVal(auctionId, { type: 'u32' })]);
+  return normalizeAuction(settled);
+}
+
 async function simulateCall(funcName: string, args: any[]): Promise<any> {
   try {
     const dummyPK = 'GBBIG4HLPGTLG6BH6YREVWJXEQ4NX74HTD444JD6A6XYS7DOFL2J6DEI';
@@ -280,11 +261,12 @@ async function simulateCall(funcName: string, args: any[]): Promise<any> {
         incrementSequenceNumber: () => {},
       } as any;
     }
+
     const tx = new TransactionBuilder(account, {
       fee: BASE_FEE,
       networkPassphrase: NETWORK_PASSPHRASE,
     })
-      .addOperation(quizContract.call(funcName, ...args))
+      .addOperation(getAuctionContract().call(funcName, ...args))
       .setTimeout(30)
       .build();
 
@@ -299,237 +281,82 @@ async function simulateCall(funcName: string, args: any[]): Promise<any> {
   }
 }
 
-// ─── Write Functions ──────────────────────────────────────────────────────────
+async function submitSignedTransaction(tx: any): Promise<string> {
+  const prepared = await server.prepareTransaction(tx);
+  const signedXdr = await signTx(prepared.toXDR());
+  if (!signedXdr) throw new Error('Wallet did not return a signed transaction.');
 
-/**
- * Submits a quiz answer via a signed Freighter transaction.
- * Costs 0.1 XLM (1,000,000 stroops) so the user can see their balance drop.
- */
-export async function submitAnswer(
-  userAddress: string,
-  questionId: number,
-  answer: string
-): Promise<boolean | null> {
-  console.log(`[submitAnswer] Q${questionId} — answer: "${answer}"`);
-  try {
-    const account = await server.getAccount(userAddress);
+  const sent = await server.sendTransaction(TransactionBuilder.fromXDR(signedXdr, NETWORK_PASSPHRASE));
+  const hash = (sent as any).hash;
+  if (!hash) throw new Error('Transaction submission failed.');
 
-    const tx = new TransactionBuilder(account, {
-      fee: '1000000', // 0.1 XLM — visible deduction
-      networkPassphrase: NETWORK_PASSPHRASE,
-    })
-      .addOperation(
-        quizContract.call(
-          'submit_answer',
-          Address.fromString(userAddress).toScVal(),
-          nativeToScVal(questionId, { type: 'u32' }),
-          nativeToScVal(answer, { type: 'string' })
-        )
-      )
-      .setTimeout(30)
-      .build();
-
-    let prepared;
-    try {
-      prepared = await server.prepareTransaction(tx);
-    } catch (e: any) {
-      console.error('[submitAnswer] prepareTransaction failed:', e.message);
-      alert('Transaction simulation failed:\n' + e.message);
-      return null;
-    }
-
-    console.log('[submitAnswer] Requesting signature...');
-    const signedXdr = await signTx(prepared.toXDR());
-
-    if (!signedXdr) {
-      console.error('[submitAnswer] Empty signature');
-      return null;
-    }
-
-    console.log('[submitAnswer] Sending transaction...');
-    const sent = await server.sendTransaction(
-      TransactionBuilder.fromXDR(signedXdr, NETWORK_PASSPHRASE)
-    );
-    console.log('[submitAnswer] Hash:', (sent as any).hash);
-
-    // Poll for result
-    for (let i = 0; i < 30; i++) {
-      const res = await fetch(RPC_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          id: 1,
-          method: 'getTransaction',
-          params: { hash: (sent as any).hash },
-        }),
-      });
-      const json = await res.json();
-      const status = json.result?.status;
-      console.log(`[submitAnswer] Poll ${i + 1}: ${status}`);
-      if (status === 'SUCCESS') return true;
-      if (status === 'FAILED') {
-        console.error('[submitAnswer] FAILED:', json.result);
-        return false;
-      }
-      await new Promise(r => setTimeout(r, 2000));
-    }
-
-    return false;
-  } catch (e) {
-    console.error('[submitAnswer] Exception:', e);
-    return null;
+  for (let i = 0; i < 30; i += 1) {
+    const res = await fetch(RPC_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'getTransaction',
+        params: { hash },
+      }),
+    });
+    const json = await res.json();
+    if (json.result?.status === 'SUCCESS') return hash;
+    if (json.result?.status === 'FAILED') throw new Error('Transaction failed on-chain.');
+    await new Promise((resolve) => setTimeout(resolve, 2000));
   }
+
+  throw new Error('Transaction is still pending. Refresh in a moment.');
 }
 
-/**
- * Submits multiple quiz answers in a single signed transaction.
- * This is the ultimate UX improvement for Level 5.
- */
-export async function submitBatchAnswers(
-  userAddress: string,
-  answers: { id: number; answer: string }[]
-): Promise<number | null> {
-  console.log(`[submitBatchAnswers] Submitting ${answers.length} answers...`);
-  try {
-    const account = await server.getAccount(userAddress);
-
-    // Convert array of answers to Soroban Vector format [(u32, String)]
-    const scAnswers = nativeToScVal(
-      answers.map((a) => [
-        nativeToScVal(a.id, { type: 'u32' }),
-        nativeToScVal(a.answer, { type: 'string' })
-      ])
-    );
-
-    const tx = new TransactionBuilder(account, {
-      fee: '1000000',
-      networkPassphrase: NETWORK_PASSPHRASE,
-    })
-      .addOperation(
-        quizContract.call(
-          'submit_batch',
-          Address.fromString(userAddress).toScVal(),
-          scAnswers
-        )
-      )
-      .setTimeout(30)
-      .build();
-
-    let prepared;
-    try {
-      prepared = await server.prepareTransaction(tx);
-    } catch (e: any) {
-      console.error('[submitBatchAnswers] prepareTransaction failed:', e.message);
-      alert('Transaction simulation failed: ' + e.message + '\n\nTry refreshing the page and ensuring your wallet is funded.');
-      return null;
-    }
-    console.log('[submitBatchAnswers] Requesting signature...');
-    const signedXdr = await signTx(prepared.toXDR());
-
-    if (!signedXdr) return null;
-
-    const sent = await server.sendTransaction(TransactionBuilder.fromXDR(signedXdr, NETWORK_PASSPHRASE));
-    
-    // Poll for result
-    for (let i = 0; i < 30; i++) {
-      const res = await fetch(RPC_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jsonrpc: '2.0', id: 1,
-          method: 'getTransaction',
-          params: { hash: (sent as any).hash }
-        }),
-      });
-      const json = await res.json();
-      if (json.result?.status === 'SUCCESS') {
-        // Extract the return value (number of correct answers)
-        const resultMetaXdr = json.result.resultMetaXdr;
-        // In a real app we'd parse this, but for simplicity we return a success indicator
-        return answers.length; 
-      }
-      if (json.result?.status === 'FAILED') return null;
-      await new Promise(r => setTimeout(r, 2000));
-    }
-    return null;
-  } catch (e) {
-    console.error('[submitBatchAnswers] Exception:', e);
-    return null;
+export function parseXlmToStroops(value: string): bigint {
+  const normalized = value.trim();
+  if (!/^\d+(\.\d{1,7})?$/.test(normalized)) {
+    throw new Error('Enter an XLM amount with up to 7 decimal places.');
   }
+  const [whole, fraction = ''] = normalized.split('.');
+  return BigInt(whole) * 10_000_000n + BigInt(fraction.padEnd(7, '0'));
 }
 
-/**
- * Seeds the contract with initial questions via Freighter wallet.
- * Calls create_quiz which is the actual Rust function on this contract.
- */
-export async function initializeContract(userAddress: string): Promise<void> {
-  const INITIAL_QUESTIONS = quizData.slice(0, 15);
-  console.log(`[seed] Initializing batch of ${INITIAL_QUESTIONS.length} questions...`);
+export function formatStroops(stroops: string | number | bigint): string {
+  const value = BigInt(stroops);
+  const whole = value / 10_000_000n;
+  const fraction = (value % 10_000_000n).toString().padStart(7, '0').replace(/0+$/, '');
+  return fraction ? `${whole}.${fraction}` : whole.toString();
+}
 
-  try {
-    const account = await server.getAccount(userAddress);
+function normalizeAuction(value: any): AuctionListing | null {
+  if (!value) return null;
+  const record = value instanceof Map ? Object.fromEntries(value) : value;
+  const endTime = Number(record.end_time ?? record.endTime ?? 0);
+  const now = Math.floor(Date.now() / 1000);
+  const settled = Boolean(record.settled);
+  const highestBid = String(record.highest_bid ?? record.highestBid ?? '0');
+  const highestBidder = normalizeAddress(record.highest_bidder ?? record.highestBidder);
+  const status: AuctionStatus = settled ? 'settled' : endTime <= now ? 'ended' : 'live';
 
-    // Convert array to Soroban Vector format [(u32, String, String)]
-    const scItems = nativeToScVal(
-      INITIAL_QUESTIONS.map((item) => [
-        nativeToScVal(item.id, { type: 'u32' }),
-        nativeToScVal(item.text, { type: 'string' }),
-        nativeToScVal(item.correctAnswer, { type: 'string' })
-      ])
-    );
+  return {
+    id: Number(record.id),
+    seller: normalizeAddress(record.seller) ?? '',
+    title: String(record.title ?? 'Untitled auction'),
+    description: String(record.description ?? ''),
+    startingBid: String(record.starting_bid ?? record.startingBid ?? '0'),
+    highestBid,
+    highestBidder,
+    token: normalizeAddress(record.token) ?? NATIVE_TOKEN,
+    endTime,
+    settled,
+    status,
+  };
+}
 
-    const tx = new TransactionBuilder(account, {
-      fee: '1000000',
-      networkPassphrase: NETWORK_PASSPHRASE,
-    })
-      .addOperation(
-        quizContract.call(
-          'create_quiz_batch',
-          scItems
-        )
-      )
-      .setTimeout(30)
-      .build();
-
-    let prepared;
-    try {
-      prepared = await server.prepareTransaction(tx);
-    } catch (e: any) {
-      alert('Initialization simulation failed: ' + e.message);
-      return;
-    }
-
-    console.log('[seed] Requesting signature...');
-    const signedXdr = await signTx(prepared.toXDR());
-
-    if (!signedXdr) throw new Error('Signing failed - no signature');
-
-    const sent = await server.sendTransaction(TransactionBuilder.fromXDR(signedXdr, NETWORK_PASSPHRASE));
-    console.log(`[seed] Batch submitted: ${(sent as any).hash}`);
-
-    // Wait for confirmation
-    for (let j = 0; j < 30; j++) {
-      const res = await fetch(RPC_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jsonrpc: '2.0', id: 1,
-          method: 'getTransaction',
-          params: { hash: (sent as any).hash }
-        }),
-      });
-      const json = await res.json();
-      if (json.result?.status === 'SUCCESS') {
-        alert('Contract initialized successfully with all 15 questions in ONE transaction! 🚀');
-        window.location.reload(); // Refresh to update counts
-        return;
-      }
-      if (json.result?.status === 'FAILED') throw new Error('Transaction failed on-chain.');
-      await new Promise(r => setTimeout(r, 2000));
-    }
-  } catch (e: any) {
-    console.error('[initializeContract] Error:', e);
-    alert('Failed to initialize: ' + e.message);
+function normalizeAddress(value: any): string | null {
+  if (!value) return null;
+  if (typeof value === 'string') return value;
+  if (typeof value.toString === 'function') {
+    const text = value.toString();
+    return text.includes('Address(') ? text.replace(/^Address\((.*)\)$/, '$1') : text;
   }
+  return null;
 }
