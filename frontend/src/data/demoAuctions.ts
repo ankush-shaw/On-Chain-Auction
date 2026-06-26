@@ -5,6 +5,7 @@ const now = Math.floor(Date.now() / 1000);
 export const demoAuctions: AuctionListing[] = [
   {
     id: 101,
+    isPreview: true,
     seller: 'GDMMSDM3KSHC5FBN2SIZYOH3FLT5ICAHHNYYCCEB7UFZZ3KMBT44OI4E',
     title: 'Mobile app landing page',
     description:
@@ -19,6 +20,7 @@ export const demoAuctions: AuctionListing[] = [
   },
   {
     id: 102,
+    isPreview: true,
     seller: 'CCATST7MXGZQWB6HQCHDLUKUZA6MVK4KIGCDFVQ34COE543GTINOK3BL',
     title: 'Brand identity sprint',
     description:
@@ -33,6 +35,7 @@ export const demoAuctions: AuctionListing[] = [
   },
   {
     id: 103,
+    isPreview: true,
     seller: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
     title: 'Smart contract audit block',
     description:

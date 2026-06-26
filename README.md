@@ -73,10 +73,17 @@ VITE_NATIVE_TOKEN_CONTRACT_ID=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2H
 Build the contract:
 
 ```bash
-stellar contract build
+cargo build --target wasm32-unknown-unknown --release -p auction-contract
 ```
 
-Deploy it to Stellar Testnet with the Stellar CLI, then put the returned contract ID into `frontend/.env` as `VITE_AUCTION_CONTRACT_ID`.
+Deploy to testnet and seed sample auctions (writes `frontend/.env`):
+
+```bash
+cd frontend
+npm run deploy:contract
+```
+
+Or deploy manually with the Stellar CLI, then put the returned contract ID into `frontend/.env` as `VITE_AUCTION_CONTRACT_ID`.
 
 ## Repository
 

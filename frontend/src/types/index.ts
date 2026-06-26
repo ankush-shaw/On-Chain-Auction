@@ -20,4 +20,5 @@ export interface AuctionListing {
   endTime: number;
   settled: boolean;
   status: AuctionStatus;
+  isPreview?: boolean;
 }

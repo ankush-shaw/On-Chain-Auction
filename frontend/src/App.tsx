@@ -29,6 +29,7 @@ function App() {
   const [auctions, setAuctions] = useState<AuctionListing[]>([]);
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const contractReady = isContractConfigured();
 
@@ -36,14 +37,20 @@ function App() {
     setLoading(true);
     setNotice(null);
     try {
-      const onChainAuctions = await loadAuctions();
-      setAuctions(onChainAuctions.length > 0 ? onChainAuctions : demoAuctions);
       if (!contractReady) {
+        setAuctions(demoAuctions);
         setNotice('Preview mode: deploy the auction contract and set VITE_AUCTION_CONTRACT_ID to enable on-chain listing and bidding.');
+        return;
+      }
+
+      const onChainAuctions = await loadAuctions();
+      setAuctions(onChainAuctions);
+      if (onChainAuctions.length === 0) {
+        setNotice('No live auctions yet. Connect your wallet and list the first project.');
       }
     } catch (e: any) {
-      setAuctions(demoAuctions);
-      setNotice(e.message || 'Showing preview listings because on-chain auctions could not be loaded.');
+      setAuctions([]);
+      setNotice(e.message || 'Could not load on-chain auctions. Check your contract ID and RPC URL.');
     } finally {
       setLoading(false);
     }
@@ -60,27 +67,45 @@ function App() {
   }, [auctions]);
 
   const handleCreate = async (input: CreateAuctionInput) => {
+    if (!contractReady) {
+      throw new Error('Deploy the auction contract and set VITE_AUCTION_CONTRACT_ID before listing projects.');
+    }
     const created = await createAuction(input);
-    if (created) setAuctions((current) => [created, ...current.filter((item) => item.id !== created.id)]);
+    if (created) {
+      setAuctions((current) => [created, ...current.filter((item) => item.id !== created.id)]);
+      setSuccess(`Listed "${created.title}" on-chain.`);
+    }
     await refreshAuctions();
   };
 
   const handleBid = async (auctionId: number, amountXlm: string) => {
+    if (!contractReady) {
+      throw new Error('On-chain bidding requires a deployed auction contract.');
+    }
     if (!wallet.address) {
       await connect('freighter');
       return;
     }
     const updated = await placeBid({ bidderAddress: wallet.address, auctionId, amountXlm });
-    if (updated) setAuctions((current) => current.map((item) => (item.id === auctionId ? updated : item)));
+    if (updated) {
+      setAuctions((current) => current.map((item) => (item.id === auctionId ? updated : item)));
+      setSuccess(`Bid placed on "${updated.title}".`);
+    }
   };
 
   const handleSettle = async (auctionId: number) => {
+    if (!contractReady) {
+      throw new Error('On-chain settlement requires a deployed auction contract.');
+    }
     if (!wallet.address) {
       await connect('freighter');
       return;
     }
     const updated = await settleAuction(auctionId, wallet.address);
-    if (updated) setAuctions((current) => current.map((item) => (item.id === auctionId ? updated : item)));
+    if (updated) {
+      setAuctions((current) => current.map((item) => (item.id === auctionId ? updated : item)));
+      setSuccess(`Auction "${updated.title}" settled. Winning bid sent to seller.`);
+    }
   };
 
   return (
@@ -155,10 +180,12 @@ function App() {
 
             {wallet.error && <p className="mt-5 rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-300">{wallet.error}</p>}
             {notice && <p className="mt-5 rounded-md border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-sm text-amber-100">{notice}</p>}
+            {success && <p className="mt-5 rounded-md border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-sm text-emerald-100">{success}</p>}
           </div>
 
           <ManagerPanel
             walletAddress={wallet.address}
+            contractReady={contractReady}
             onConnect={() => connect('freighter')}
             onCreate={handleCreate}
           />
@@ -177,25 +204,36 @@ function App() {
           </div>
 
           <AnimatePresence mode="popLayout">
-            <motion.div layout className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {auctions.map((auction) => (
-                <motion.div
-                  key={auction.id}
-                  layout
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -16 }}
-                >
-                  <AuctionCard
-                    auction={auction}
-                    walletAddress={wallet.address}
-                    onConnect={() => connect('freighter')}
-                    onBid={handleBid}
-                    onSettle={handleSettle}
-                  />
-                </motion.div>
-              ))}
-            </motion.div>
+            {auctions.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-slate-700 bg-slate-950/60 px-6 py-12 text-center">
+                <p className="text-lg font-semibold text-white">No auctions on the board yet</p>
+                <p className="mt-2 text-sm text-slate-400">
+                  {contractReady
+                    ? 'Connect your wallet and list the first project from the manager console.'
+                    : 'Deploy the contract to start listing real projects on-chain.'}
+                </p>
+              </div>
+            ) : (
+              <motion.div layout className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                {auctions.map((auction) => (
+                  <motion.div
+                    key={auction.id}
+                    layout
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -16 }}
+                  >
+                    <AuctionCard
+                      auction={auction}
+                      walletAddress={wallet.address}
+                      onConnect={() => connect('freighter')}
+                      onBid={handleBid}
+                      onSettle={handleSettle}
+                    />
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
           </AnimatePresence>
         </section>
 

@@ -4,11 +4,12 @@ import type { CreateAuctionInput } from '../services/soroban';
 
 interface ManagerPanelProps {
   walletAddress: string | null;
+  contractReady: boolean;
   onConnect: () => void;
   onCreate: (input: CreateAuctionInput) => Promise<void>;
 }
 
-export function ManagerPanel({ walletAddress, onConnect, onCreate }: ManagerPanelProps) {
+export function ManagerPanel({ walletAddress, contractReady, onConnect, onCreate }: ManagerPanelProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [startingBidXlm, setStartingBidXlm] = useState('10');
@@ -107,11 +108,17 @@ export function ManagerPanel({ walletAddress, onConnect, onCreate }: ManagerPane
           </label>
         </div>
 
+        {!contractReady && (
+          <p className="rounded-md border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-sm text-amber-100">
+            Deploy the auction contract and set `VITE_AUCTION_CONTRACT_ID` before listing projects on-chain.
+          </p>
+        )}
+
         {error && <p className="rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-300">{error}</p>}
 
-        <button type="submit" disabled={busy} className="btn-primary w-full justify-center stable-button">
+        <button type="submit" disabled={busy || !contractReady} className="btn-primary w-full justify-center stable-button">
           {busy ? <Loader2 className="animate-spin" size={18} /> : <Plus size={18} />}
-          {walletAddress ? 'List Project' : 'Connect Wallet to List'}
+          {!contractReady ? 'Contract Not Configured' : walletAddress ? 'List Project' : 'Connect Wallet to List'}
         </button>
       </form>
     </section>

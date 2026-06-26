@@ -159,6 +159,12 @@ export async function getXlmBalance(address: string): Promise<string | null> {
   }
 }
 
+export async function getNextAuctionId(): Promise<number> {
+  const count = await simulateCall('get_auction_count', []);
+  const maxId = typeof count === 'number' ? count : 0;
+  return maxId + 1;
+}
+
 export async function loadAuctions(): Promise<AuctionListing[]> {
   if (!isContractConfigured()) return [];
 
@@ -176,7 +182,7 @@ export async function loadAuctions(): Promise<AuctionListing[]> {
 }
 
 export async function createAuction(input: CreateAuctionInput): Promise<AuctionListing | null> {
-  const id = Date.now() % 2_000_000_000;
+  const id = await getNextAuctionId();
   const startingBid = parseXlmToStroops(input.startingBidXlm);
   const durationSeconds = Math.max(1, Math.round(input.durationHours * 60 * 60));
   const contract = getAuctionContract();

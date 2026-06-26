@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy:contract": "node deploy-auction.js"
   },
   "dependencies": {
     "@albedo-link/intent": "^0.13.0",

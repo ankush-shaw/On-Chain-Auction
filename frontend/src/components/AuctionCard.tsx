@@ -33,7 +33,19 @@ export function AuctionCard({ auction, walletAddress, onConnect, onBid, onSettle
     return `${Math.max(minutes, 1)}m left`;
   }, [auction.endTime, auction.settled]);
 
+  const canTransact = !auction.isPreview;
+  const canSettle =
+    canTransact &&
+    !auction.settled &&
+    auction.status === 'ended' &&
+    auction.highestBidder !== null &&
+    auction.highestBid !== '0';
+
   const submitBid = async () => {
+    if (!canTransact) {
+      setError('Preview listing only. Deploy the contract to place real bids.');
+      return;
+    }
     if (!walletAddress) {
       onConnect();
       return;
@@ -51,6 +63,14 @@ export function AuctionCard({ auction, walletAddress, onConnect, onBid, onSettle
   };
 
   const settle = async () => {
+    if (!canSettle) {
+      setError(
+        auction.isPreview
+          ? 'Preview listing only. Deploy the contract to settle real auctions.'
+          : 'This auction cannot be settled until it ends with at least one bid.'
+      );
+      return;
+    }
     setBusy('settle');
     setError(null);
     try {
@@ -69,7 +89,7 @@ export function AuctionCard({ auction, walletAddress, onConnect, onBid, onSettle
           <div className="mb-3 flex items-center gap-2">
             <span className={`status-dot ${auction.status}`} />
             <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-              {auction.status}
+              {auction.isPreview ? 'preview' : auction.status}
             </span>
           </div>
           <h3 className="text-xl font-bold text-white">{auction.title}</h3>
@@ -117,21 +137,30 @@ export function AuctionCard({ auction, walletAddress, onConnect, onBid, onSettle
             value={bidAmount}
             onChange={(event) => setBidAmount(event.target.value)}
             placeholder={`${minimumBid} XLM`}
-            className="min-w-0 flex-1 rounded-md border border-slate-700 bg-slate-900 px-3 py-3 text-sm text-white outline-none transition focus:border-cyan-400"
+            disabled={!canTransact}
+            className="min-w-0 flex-1 rounded-md border border-slate-700 bg-slate-900 px-3 py-3 text-sm text-white outline-none transition focus:border-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
           />
-          <button onClick={submitBid} disabled={busy !== null} className="btn-primary stable-button">
+          <button onClick={submitBid} disabled={busy !== null || !canTransact} className="btn-primary stable-button">
             {busy === 'bid' ? <Loader2 className="animate-spin" size={18} /> : <Gavel size={18} />}
-            Bid
+            {canTransact ? 'Bid' : 'Preview'}
           </button>
         </div>
       ) : (
         <button
           onClick={settle}
-          disabled={auction.settled || busy !== null || !walletAddress}
+          disabled={auction.settled || busy !== null || !walletAddress || !canSettle}
           className="btn-primary mt-5 w-full justify-center stable-button"
         >
           {busy === 'settle' ? <Loader2 className="animate-spin" size={18} /> : <Trophy size={18} />}
-          {auction.settled ? 'Settled' : walletAddress ? 'Settle Winner' : 'Connect to Settle'}
+          {auction.settled
+            ? 'Settled'
+            : !canTransact
+              ? 'Preview Only'
+              : !canSettle
+                ? 'No Winning Bid'
+                : walletAddress
+                  ? 'Settle Winner'
+                  : 'Connect to Settle'}
         </button>
       )}
     </article>
