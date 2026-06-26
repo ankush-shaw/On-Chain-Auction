@@ -8,7 +8,7 @@ Built as part of the **Rise In Build on Stellar** monthly challenge.
 
 ## 🌐 Live Demo
 
-> Deploy your own instance using the steps below, or connect to testnet with your Freighter/Albedo/xBull/Hana wallet.
+> https://on-chain-auction.vercel.app/
 
 ---
 
