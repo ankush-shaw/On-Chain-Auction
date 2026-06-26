@@ -70,13 +70,13 @@ VITE_NATIVE_TOKEN_CONTRACT_ID=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2H
 
 ## Deployment Notes
 
-Build the contract:
+Build the contract from the repository root:
 
 ```bash
-cargo build --target wasm32-unknown-unknown --release -p auction-contract
+stellar contract build --package auction-contract
 ```
 
-Deploy to testnet and seed sample auctions (writes `frontend/.env`):
+Deploy to testnet and seed sample auctions from the `frontend` folder. The deploy script will build the WASM automatically if it is missing:
 
 ```bash
 cd frontend

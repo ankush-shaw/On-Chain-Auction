@@ -11,13 +11,18 @@ import {
 } from '@stellar/stellar-sdk';
 import fs from 'fs';
 import path from 'path';
+import { spawnSync } from 'child_process';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const PROJECT_ROOT = path.resolve(__dirname, '..');
 const RPC_URL = 'https://soroban-testnet.stellar.org';
 const NETWORK_PASSPHRASE = Networks.TESTNET;
 const NATIVE_TOKEN = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
-const WASM_PATH = path.resolve(__dirname, '../target/wasm32-unknown-unknown/release/auction_contract.wasm');
+const WASM_CANDIDATES = [
+  path.join(PROJECT_ROOT, 'target/wasm32v1-none/release/auction_contract.wasm'),
+  path.join(PROJECT_ROOT, 'target/wasm32-unknown-unknown/release/auction_contract.wasm'),
+];
 const ENV_PATH = path.resolve(__dirname, '.env');
 
 const SAMPLE_AUCTIONS = [
@@ -42,6 +47,40 @@ const SAMPLE_AUCTIONS = [
 ];
 
 const server = new rpc.Server(RPC_URL);
+
+function resolveWasmPath() {
+  for (const candidate of WASM_CANDIDATES) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+
+  console.log('WASM not found. Building contract with Stellar CLI...');
+  const result = spawnSync('stellar', ['contract', 'build', '--package', 'auction-contract'], {
+    cwd: PROJECT_ROOT,
+    encoding: 'utf8',
+    shell: true,
+  });
+
+  const output = `${result.stdout ?? ''}\n${result.stderr ?? ''}`.trim();
+  if (result.status !== 0) {
+    throw new Error(
+      output ||
+        'Contract build failed. Install the Stellar CLI, then run: stellar contract build --package auction-contract'
+    );
+  }
+
+  const reportedPath = output.match(/Wasm File:\s*(.+\.wasm)/)?.[1]?.trim();
+  if (reportedPath && fs.existsSync(reportedPath)) {
+    return reportedPath;
+  }
+
+  for (const candidate of WASM_CANDIDATES) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+
+  throw new Error(
+    'Contract build finished but auction_contract.wasm was not found. Run from the repo root: stellar contract build --package auction-contract'
+  );
+}
 
 function parseXlmToStroops(value) {
   const [whole, fraction = ''] = value.split('.');
@@ -93,9 +132,8 @@ async function simulateCall(contractId, funcName, args = []) {
 }
 
 async function deployAndSeed() {
-  if (!fs.existsSync(WASM_PATH)) {
-    throw new Error(`WASM not found at ${WASM_PATH}. Run: cargo build --target wasm32-unknown-unknown --release -p auction-contract`);
-  }
+  const wasmPath = resolveWasmPath();
+  console.log('Using WASM:', wasmPath);
 
   const kp = Keypair.random();
   const addressStr = kp.publicKey();
@@ -108,7 +146,7 @@ async function deployAndSeed() {
   await new Promise((resolve) => setTimeout(resolve, 5000));
 
   let account = await server.getAccount(addressStr);
-  const wasm = fs.readFileSync(WASM_PATH);
+  const wasm = fs.readFileSync(wasmPath);
 
   console.log('Uploading WASM...');
   const uploadTx = new TransactionBuilder(account, {
