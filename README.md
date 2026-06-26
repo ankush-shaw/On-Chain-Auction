@@ -83,10 +83,17 @@ cd frontend
 npm run deploy:contract
 ```
 
-If Stellar Friendbot is down, fund a testnet account at [Stellar Lab](https://lab.stellar.org/account/create/testnet), then deploy with your funded secret:
+If Stellar Friendbot is down, fund a testnet account at [Stellar Lab](https://lab.stellar.org/account/create/testnet), then deploy with your funded **secret key** (starts with `S`, not the public `G` address):
 
 ```powershell
-$env:DEPLOY_SECRET_KEY="YOUR_TESTNET_SECRET"
+$env:DEPLOY_SECRET_KEY="SXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+npm run deploy:contract
+```
+
+To use Friendbot instead of a saved secret, clear the variable first:
+
+```powershell
+Remove-Item Env:DEPLOY_SECRET_KEY
 npm run deploy:contract
 ```
 

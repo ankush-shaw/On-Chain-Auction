@@ -92,9 +92,29 @@ function resolveWasmPath() {
   );
 }
 
+function normalizeDeploySecret(rawValue) {
+  if (!rawValue) return null;
+  const trimmed = rawValue.trim().replace(/^['"]|['"]$/g, '');
+  return trimmed || null;
+}
+
 function loadDeployKeypair() {
-  const secret = process.env.DEPLOY_SECRET_KEY?.trim();
+  const secret = normalizeDeploySecret(process.env.DEPLOY_SECRET_KEY);
   if (secret) {
+    if (!/^S[A-Z2-7]{55}$/.test(secret)) {
+      throw new Error(
+        [
+          'DEPLOY_SECRET_KEY is not a valid Stellar secret key.',
+          'It must start with "S" and be 56 characters long.',
+          'You may have pasted a public key (starts with "G") or a placeholder by mistake.',
+          'Create or fund a testnet account at https://lab.stellar.org/account/create/testnet',
+          'and copy the secret key shown there.',
+          'To use Friendbot instead, clear the variable first:',
+          '  Remove-Item Env:DEPLOY_SECRET_KEY',
+        ].join('\n')
+      );
+    }
+
     const kp = Keypair.fromSecret(secret);
     console.log('Using deploy account from DEPLOY_SECRET_KEY:', kp.publicKey());
     return kp;
