@@ -131,6 +131,7 @@ async function waitForAccount(address, attempts = 15) {
     try {
       return await server.getAccount(address);
     } catch {
+      console.log(`Waiting for account funding... (${i + 1}/${attempts})`);
       await new Promise((resolve) => setTimeout(resolve, 2000));
     }
   }
@@ -140,10 +141,11 @@ async function waitForAccount(address, attempts = 15) {
 async function fundViaFriendbot(address) {
   let lastError = 'No Friendbot response';
 
-  for (let attempt = 1; attempt <= 5; attempt += 1) {
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
     for (const endpoint of FRIENDBOT_ENDPOINTS) {
       const url = `${endpoint}?addr=${encodeURIComponent(address)}`;
       try {
+        console.log(`Trying Friendbot (${attempt}/3): ${endpoint}`);
         const response = await fetch(url, { redirect: 'follow' });
         const body = await response.text();
 
@@ -160,21 +162,31 @@ async function fundViaFriendbot(address) {
       }
     }
 
-    if (attempt < 5) {
-      console.log(`Friendbot retry ${attempt}/5 in 3s...`);
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+    if (attempt < 3) {
+      console.log(`Friendbot retry ${attempt}/3 in 2s...`);
+      await new Promise((resolve) => setTimeout(resolve, 2000));
     }
   }
 
   throw new Error(`Friendbot funding failed after retries.\nLast error: ${lastError}\n${FUNDING_HELP}`);
 }
 
-async function ensureFunded(address) {
+async function ensureFunded(address, hasProvidedSecret) {
   try {
     const account = await server.getAccount(address);
     console.log('Deploy account is already funded.');
     return account;
   } catch {
+    if (hasProvidedSecret) {
+      throw new Error(
+        [
+          `Deploy account ${address} is not funded on testnet yet.`,
+          'Fund it at https://lab.stellar.org/account/create/testnet',
+          'or send test XLM to this address, then rerun deploy.',
+        ].join('\n')
+      );
+    }
+
     console.log('Funding via Friendbot...');
     return fundViaFriendbot(address);
   }
@@ -185,8 +197,8 @@ function parseXlmToStroops(value) {
   return BigInt(whole) * 10_000_000n + BigInt(fraction.padEnd(7, '0'));
 }
 
-async function waitForTransaction(hash) {
-  while (true) {
+async function waitForTransaction(hash, label = 'transaction', maxAttempts = 45) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     const res = await fetch(RPC_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -198,11 +210,28 @@ async function waitForTransaction(hash) {
       }),
     });
     const json = await res.json();
-    const status = json.result?.status;
-    if (status === 'SUCCESS') return json.result;
-    if (status === 'FAILED') throw new Error('Transaction failed: ' + JSON.stringify(json.result));
+    const status = json.result?.status ?? 'NOT_FOUND';
+
+    if (status === 'SUCCESS') {
+      console.log(`${label} confirmed.`);
+      return json.result;
+    }
+    if (status === 'FAILED') throw new Error(`${label} failed on-chain: ` + JSON.stringify(json.result));
+
+    console.log(`${label} pending (${attempt}/${maxAttempts}, status: ${status})...`);
     await new Promise((resolve) => setTimeout(resolve, 2000));
   }
+
+  throw new Error(`${label} timed out after ${maxAttempts * 2}s. Hash: ${hash}`);
+}
+
+async function submitTransaction(label, tx, kp) {
+  console.log(`${label}...`);
+  const prepared = await server.prepareTransaction(tx);
+  prepared.sign(kp);
+  const sent = await server.sendTransaction(prepared);
+  console.log(`${label} submitted: ${sent.hash}`);
+  return waitForTransaction(sent.hash, label);
 }
 
 async function simulateCall(contractId, funcName, args = []) {
@@ -233,12 +262,14 @@ async function deployAndSeed() {
   const wasmPath = resolveWasmPath();
   console.log('Using WASM:', wasmPath);
 
+  const providedSecret = Boolean(normalizeDeploySecret(process.env.DEPLOY_SECRET_KEY));
   const kp = loadDeployKeypair();
   const addressStr = kp.publicKey();
-  let account = await ensureFunded(addressStr);
+  let account = await ensureFunded(addressStr, providedSecret);
   const wasm = fs.readFileSync(wasmPath);
+  const skipSeed = ['1', 'true', 'yes'].includes(String(process.env.SKIP_SEED ?? '').toLowerCase());
+  const auctionsToSeed = skipSeed ? [] : SAMPLE_AUCTIONS;
 
-  console.log('Uploading WASM...');
   const uploadTx = new TransactionBuilder(account, {
     fee: '1000000',
     networkPassphrase: NETWORK_PASSPHRASE,
@@ -247,15 +278,11 @@ async function deployAndSeed() {
     .setTimeout(30)
     .build();
 
-  const uploadPrepared = await server.prepareTransaction(uploadTx);
-  uploadPrepared.sign(kp);
-  const uploadRes = await server.sendTransaction(uploadPrepared);
-  const uploadResult = await waitForTransaction(uploadRes.hash);
+  const uploadResult = await submitTransaction('Uploading WASM', uploadTx, kp);
   const txResult = xdr.TransactionResult.fromXDR(uploadResult.resultXdr, 'base64');
   const wasmHash = txResult.result().results()[0].tr().invokeHostFunctionResult().success().toString('hex');
   console.log('WASM hash:', wasmHash);
 
-  console.log('Instantiating contract...');
   account = await server.getAccount(addressStr);
   const instTx = new TransactionBuilder(account, {
     fee: '1000000',
@@ -270,10 +297,7 @@ async function deployAndSeed() {
     .setTimeout(30)
     .build();
 
-  const instPrepared = await server.prepareTransaction(instTx);
-  instPrepared.sign(kp);
-  const instRes = await server.sendTransaction(instPrepared);
-  const instResult = await waitForTransaction(instRes.hash);
+  const instResult = await submitTransaction('Instantiating contract', instTx, kp);
   const contractId = JSON.stringify(instResult).match(/C[A-Z0-9]{55}/)?.[0];
   if (!contractId) throw new Error('Could not extract contract ID from deployment result');
   console.log('Contract ID:', contractId);
@@ -281,8 +305,7 @@ async function deployAndSeed() {
   const contract = new Contract(contractId);
   let auctionId = 1;
 
-  for (const item of SAMPLE_AUCTIONS) {
-    console.log(`Creating auction ${auctionId}: ${item.title}`);
+  for (const item of auctionsToSeed) {
     account = await server.getAccount(addressStr);
     const durationSeconds = Math.max(1, Math.round(item.durationHours * 60 * 60));
     const seedTx = new TransactionBuilder(account, {
@@ -304,11 +327,12 @@ async function deployAndSeed() {
       .setTimeout(30)
       .build();
 
-    const seedPrepared = await server.prepareTransaction(seedTx);
-    seedPrepared.sign(kp);
-    const seedRes = await server.sendTransaction(seedPrepared);
-    await waitForTransaction(seedRes.hash);
+    await submitTransaction(`Creating auction ${auctionId}`, seedTx, kp);
     auctionId += 1;
+  }
+
+  if (skipSeed) {
+    console.log('Skipped sample auction seeding (SKIP_SEED enabled).');
   }
 
   const countVal = await simulateCall(contractId, 'get_auction_count', []);

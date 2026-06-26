@@ -76,7 +76,14 @@ Build the contract from the repository root:
 stellar contract build --package auction-contract
 ```
 
-Deploy to testnet and seed sample auctions from the `frontend` folder. The deploy script will build the WASM automatically if it is missing:
+Deploy to testnet and seed sample auctions from the `frontend` folder. The deploy script will build the WASM automatically if it is missing. Expect **2–5 minutes** on testnet (upload, deploy, and 3 sample auctions).
+
+For a faster deploy without sample listings:
+
+```powershell
+$env:SKIP_SEED="1"
+npm run deploy:contract
+```
 
 ```bash
 cd frontend
