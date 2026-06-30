@@ -267,40 +267,39 @@ async function deployAndSeed() {
   const kp = loadDeployKeypair();
   const addressStr = kp.publicKey();
   let account = await ensureFunded(addressStr, providedSecret);
-  const wasm = fs.readFileSync(wasmPath);
   const skipSeed = ['1', 'true', 'yes'].includes(String(process.env.SKIP_SEED ?? '').toLowerCase());
   const auctionsToSeed = skipSeed ? [] : SAMPLE_AUCTIONS;
 
-  const uploadTx = new TransactionBuilder(account, {
-    fee: '1000000',
-    networkPassphrase: NETWORK_PASSPHRASE,
-  })
-    .addOperation(Operation.uploadContractWasm({ wasm }))
-    .setTimeout(30)
-    .build();
+  console.log('Deploying contract using Stellar CLI...');
+  const deployResult = spawnSync(
+    'stellar',
+    [
+      'contract',
+      'deploy',
+      '--wasm',
+      `"${wasmPath}"`,
+      '--source-account',
+      kp.secret(),
+      '--rpc-url',
+      RPC_URL,
+      '--network-passphrase',
+      `"${NETWORK_PASSPHRASE}"`,
+    ],
+    {
+      encoding: 'utf8',
+      shell: true,
+    }
+  );
 
-  const uploadResult = await submitTransaction('Uploading WASM', uploadTx, kp);
-  const txResult = xdr.TransactionResult.fromXDR(uploadResult.resultXdr, 'base64');
-  const wasmHash = txResult.result().results()[0].tr().invokeHostFunctionResult().success().toString('hex');
-  console.log('WASM hash:', wasmHash);
+  const deployOutput = `${deployResult.stdout ?? ''}\n${deployResult.stderr ?? ''}`.trim();
+  if (deployResult.status !== 0) {
+    throw new Error('Stellar CLI deploy failed:\n' + deployOutput);
+  }
 
-  account = await server.getAccount(addressStr);
-  const instTx = new TransactionBuilder(account, {
-    fee: '1000000',
-    networkPassphrase: NETWORK_PASSPHRASE,
-  })
-    .addOperation(
-      Operation.createCustomContract({
-        wasmHash: Buffer.from(wasmHash, 'hex'),
-        address: new Address(addressStr),
-      })
-    )
-    .setTimeout(30)
-    .build();
-
-  const instResult = await submitTransaction('Instantiating contract', instTx, kp);
-  const contractId = JSON.stringify(instResult).match(/C[A-Z0-9]{55}/)?.[0];
-  if (!contractId) throw new Error('Could not extract contract ID from deployment result');
+  const contractId = deployOutput.match(/(C[A-Z0-9]{55})/)?.[1];
+  if (!contractId) {
+    throw new Error('Could not find contract ID in deploy output:\n' + deployOutput);
+  }
   console.log('Contract ID:', contractId);
 
   const contract = new Contract(contractId);
