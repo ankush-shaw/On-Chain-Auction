@@ -41,9 +41,7 @@ jobs:
           targets: wasm32-unknown-unknown
 
       - name: Install Stellar CLI
-        run: |
-          curl -sSfL https://release.stellar.org/stellar-cli/install.sh | sh
-          echo "$HOME/.stellar-cli/bin" >> $GITHUB_PATH
+        uses: stellar/stellar-cli@v25.2.0
 
       - name: Build Contract (WASM)
         run: stellar contract build --package auction-contract
