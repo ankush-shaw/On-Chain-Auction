@@ -10,6 +10,9 @@ target
 dist/
 .env
 
+# Vite local cache
+.vite/
+
 # Logs
 build.log
 *.log
