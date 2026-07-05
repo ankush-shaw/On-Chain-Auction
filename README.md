@@ -14,16 +14,17 @@ A decentralized, on-chain project bidding and auction platform built on **Stella
 *(Add screenshots, GIFs, or embedded video links here to showcase your application)*
 
 #### ☀️ Light (Cream) Mode & Bidding Board
-<!-- Add your top half cream/light mode screenshot or GIF below -->
-```
-[Insert Screenshot/GIF of Light Cream Mode Dashboard here]
-```
+
+<img width="1898" height="872" alt="image" src="https://github.com/user-attachments/assets/8e2f696d-ec76-413b-abf2-7a8316cf51c8" />
+
 
 #### 🌙 Dark Mode & Manager Console
-<!-- Add your dark mode dashboard screenshot or GIF below -->
-```
-[Insert Screenshot/GIF of Dark Mode Console here]
-```
+
+<img width="1888" height="861" alt="image" src="https://github.com/user-attachments/assets/bb4cdb07-c8aa-4c12-bc30-09d46b25f82c" />
+
+### Mobile Responsive view
+
+<img width="276" height="585" alt="image" src="https://github.com/user-attachments/assets/d43f72a3-b390-4a3d-8683-577b983c6c5c" />
 
 ---
 
@@ -31,7 +32,7 @@ A decentralized, on-chain project bidding and auction platform built on **Stella
 
 | Item | Value |
 |:---|:---|
-| **Live Demo** | [https://onchain-auction.vercel.app/](https://onchain-auction.vercel.app/) *(or insert custom URL)* |
+| **Live Demo** | [https://onchain-auction.vercel.app/](https://onchain-auction.vercel.app/)  |
 | **Demo Video** | [Watch Demo Video](https://drive.google.com/file/d/YOUR_VIDEO_ID_HERE/view?usp=sharing) *(insert link to screen recording)* |
 | **Pitch Deck / PPT** | [View Pitch Deck](https://docs.google.com/presentation/d/YOUR_PPT_ID_HERE/edit?usp=sharing) *(insert link to deck)* |
 | **Contract ID** | `VITE_AUCTION_CONTRACT_ID` *(insert contract address)* |
