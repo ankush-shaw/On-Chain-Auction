@@ -152,8 +152,8 @@ graph TD
 
     %% Contract Logic Flow
     Contract -- "a. Lock current bid in escrow" --> SAC
-    Contract -- "b. Auto-refund previous bidder" --> SAC
     Contract -- "c. Settle winner and transfer funds" --> SAC
+```
 
 ---
 ## 📜 Smart Contract API
