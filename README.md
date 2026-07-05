@@ -218,6 +218,7 @@ test test::test_settle_auction_transfers_winning_bid_to_seller ... ok
 
 test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
 ```
+<img width="897" height="160" alt="image" src="https://github.com/user-attachments/assets/82a3f21c-063b-4a28-b302-b9e65b7ecd61" />
 
 ---
 
