@@ -33,8 +33,8 @@ A decentralized, on-chain project bidding and auction platform built on **Stella
 | Item | Value |
 |:---|:---|
 | **Live Demo** | [https://onchain-auction.vercel.app/](https://onchain-auction.vercel.app/)  |
-| **Demo Video** | [Watch Demo Video](https://drive.google.com/file/d/YOUR_VIDEO_ID_HERE/view?usp=sharing) *(insert link to screen recording)* |
-| **Pitch Deck / PPT** | [View Pitch Deck](https://docs.google.com/presentation/d/YOUR_PPT_ID_HERE/edit?usp=sharing) *(insert link to deck)* |
+| **Demo Video** | [Watch Demo Video](https://drive.google.com/file/d/14AbMnbf_OQNQ7jH9q6hOr0vyzt52T1pG/view?usp=sharing)|
+| **Pitch Deck / PPT** | [View Pitch Deck](https://docs.google.com/presentation/d/1b2FdjQvPswGlY00AivnkJaLB3KKDDh-A/edit?usp=sharing&ouid=104656030980064295821&rtpof=true&sd=true) |
 | **Contract ID** | `CAFY23YICS2EP3QXMPGBPGBN5UMNERVOE453BEIZDYNNW2JXLDKVX5SY` |
 | **Network** | Stellar Testnet |
 | **Explorer** | [View on Stellar.Expert](https://stellar.expert/explorer/testnet/contract/CAFY23YICS2EP3QXMPGBPGBN5UMNERVOE453BEIZDYNNW2JXLDKVX5SY) |
