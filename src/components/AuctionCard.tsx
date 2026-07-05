@@ -83,20 +83,20 @@ export function AuctionCard({ auction, walletAddress, onConnect, onBid, onSettle
   };
 
   return (
-    <article className="rounded-lg border border-slate-800 bg-slate-950/80 p-5 shadow-xl shadow-slate-950/20">
-      <div className="flex items-start justify-between gap-4">
-        <div>
+    <article className="rounded-lg border border-slate-800 bg-slate-950/80 p-4 sm:p-5 shadow-xl shadow-slate-950/20">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
           <div className="mb-3 flex items-center gap-2">
             <span className={`status-dot ${auction.status}`} />
             <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
               {auction.isPreview ? 'preview' : auction.status}
             </span>
           </div>
-          <h3 className="text-xl font-bold text-white">{auction.title}</h3>
-          <p className="mt-2 text-sm leading-6 text-slate-400">{auction.description}</p>
+          <h3 className="text-lg sm:text-xl font-bold text-white leading-snug">{auction.title}</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-400 line-clamp-3">{auction.description}</p>
         </div>
-        <div className="rounded-md border border-cyan-400/20 bg-cyan-400/10 p-3 text-cyan-200">
-          <Gavel size={22} />
+        <div className="rounded-md border border-cyan-400/20 bg-cyan-400/10 p-2.5 sm:p-3 text-cyan-200 shrink-0">
+          <Gavel size={20} />
         </div>
       </div>
 
@@ -111,13 +111,15 @@ export function AuctionCard({ auction, walletAddress, onConnect, onBid, onSettle
         </div>
       </div>
 
-      <div className="mt-4 flex items-center justify-between gap-3 text-xs text-slate-500">
-        <span className="flex min-w-0 items-center gap-2">
-          <Wallet size={14} />
-          <span className="truncate">{auction.seller}</span>
+      <div className="mt-4 flex flex-col gap-1.5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+        <span className="flex min-w-0 items-center gap-1.5">
+          <Wallet size={13} className="shrink-0" />
+          <span className="truncate font-mono" title={auction.seller}>
+            {auction.seller.slice(0, 6)}...{auction.seller.slice(-6)}
+          </span>
         </span>
-        <span className="flex items-center gap-2 text-slate-300">
-          <Clock size={14} />
+        <span className="flex items-center gap-1.5 text-slate-300 shrink-0">
+          <Clock size={13} />
           {timeLabel}
         </span>
       </div>
@@ -132,7 +134,7 @@ export function AuctionCard({ auction, walletAddress, onConnect, onBid, onSettle
       {error && <p className="mt-4 rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-300">{error}</p>}
 
       {auction.status === 'live' ? (
-        <div className="mt-5 flex gap-2">
+        <div className="mt-5 flex flex-col xs:flex-row gap-2">
           <input
             value={bidAmount}
             onChange={(event) => setBidAmount(event.target.value)}
@@ -140,7 +142,7 @@ export function AuctionCard({ auction, walletAddress, onConnect, onBid, onSettle
             disabled={!canTransact}
             className="min-w-0 flex-1 rounded-md border border-slate-700 bg-slate-900 px-3 py-3 text-sm text-white outline-none transition focus:border-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
           />
-          <button onClick={submitBid} disabled={busy !== null || !canTransact} className="btn-primary stable-button">
+          <button onClick={submitBid} disabled={busy !== null || !canTransact} className="btn-primary stable-button shrink-0">
             {busy === 'bid' ? <Loader2 className="animate-spin" size={18} /> : <Gavel size={18} />}
             {canTransact ? 'Bid' : 'Preview'}
           </button>

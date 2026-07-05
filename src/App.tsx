@@ -110,17 +110,17 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
-      <div className="border-b border-slate-800 bg-slate-950/90">
-        <header className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-5 md:flex-row md:items-center md:justify-between">
+      <div className="border-b border-slate-800 bg-slate-950/90 sticky top-0 z-50 backdrop-blur-sm">
+        <header className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:px-5 sm:py-5 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300">Stellar Testnet</p>
-            <h1 className="mt-2 text-3xl font-black tracking-normal text-white md:text-4xl">OnChainAuction</h1>
+            <h1 className="mt-1 text-2xl font-black tracking-normal text-white sm:text-3xl md:text-4xl">OnChainAuction</h1>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             {wallet.isConnected && wallet.address ? (
               <>
-                <div className="rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm">
+                <div className="rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm min-w-0 max-w-full">
                   <span className="text-slate-500">Wallet </span>
                   <span className="font-mono text-cyan-200">
                     {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}
@@ -132,38 +132,40 @@ function App() {
                 </button>
               </>
             ) : (
-              walletOptions.map((option) => (
-                <button
-                  key={option.type}
-                  onClick={() => connect(option.type)}
-                  disabled={wallet.isConnecting}
-                  className="btn-ghost stable-button"
-                >
-                  {option.label}
-                </button>
-              ))
+              <div className="flex flex-wrap gap-2">
+                {walletOptions.map((option) => (
+                  <button
+                    key={option.type}
+                    onClick={() => connect(option.type)}
+                    disabled={wallet.isConnecting}
+                    className="btn-ghost stable-button"
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
             )}
           </div>
         </header>
       </div>
 
-      <main className="mx-auto max-w-7xl px-5 py-8">
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-5 sm:py-8">
         <section className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr] lg:items-start">
-          <div className="py-4">
+          <div className="py-2 sm:py-4">
             <div className="max-w-3xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-300">
+              <p className="text-xs sm:text-sm font-semibold uppercase tracking-[0.22em] text-emerald-300">
                 Project auctions with wallet-settled bidding
               </p>
-              <h2 className="mt-4 text-4xl font-black leading-tight text-white md:text-6xl">
+              <h2 className="mt-3 sm:mt-4 text-3xl sm:text-4xl font-black leading-tight text-white md:text-5xl lg:text-6xl">
                 List a project, open the bidding, settle the winner on-chain.
               </h2>
-              <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-400">
+              <p className="mt-4 sm:mt-5 max-w-2xl text-base sm:text-lg leading-7 sm:leading-8 text-slate-400">
                 Managers publish project opportunities to a Soroban contract. Public bidders connect a Stellar wallet,
                 submit XLM-backed bids, and the highest bidder wins when the auction closes.
               </p>
             </div>
 
-            <div className="mt-8 grid max-w-2xl grid-cols-3 gap-3">
+            <div className="mt-6 sm:mt-8 grid max-w-2xl grid-cols-3 gap-2 sm:gap-3">
               <div className="metric">
                 <p>{stats.total}</p>
                 <span>Listings</span>
@@ -174,13 +176,13 @@ function App() {
               </div>
               <div className="metric">
                 <p>{stats.totalBids}</p>
-                <span>With bids</span>
+                <span>Bids</span>
               </div>
             </div>
 
-            {wallet.error && <p className="mt-5 rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-300">{wallet.error}</p>}
-            {notice && <p className="mt-5 rounded-md border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-sm text-amber-100">{notice}</p>}
-            {success && <p className="mt-5 rounded-md border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-sm text-emerald-100">{success}</p>}
+            {wallet.error && <p className="mt-4 rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-300">{wallet.error}</p>}
+            {notice && <p className="mt-4 rounded-md border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-sm text-amber-100">{notice}</p>}
+            {success && <p className="mt-4 rounded-md border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-sm text-emerald-100">{success}</p>}
           </div>
 
           <ManagerPanel
@@ -191,11 +193,11 @@ function App() {
           />
         </section>
 
-        <section className="mt-10">
-          <div className="mb-5 flex items-center justify-between gap-4">
+        <section className="mt-8 sm:mt-10">
+          <div className="mb-4 sm:mb-5 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-2xl font-bold text-white">Project Board</h2>
-              <p className="mt-1 text-sm text-slate-500">Live and recently ended auctions for public bidding.</p>
+              <h2 className="text-xl sm:text-2xl font-bold text-white">Project Board</h2>
+              <p className="mt-1 text-xs sm:text-sm text-slate-500">Live and recently ended auctions for public bidding.</p>
             </div>
             <button onClick={refreshAuctions} disabled={loading} className="btn-ghost stable-button">
               <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
@@ -214,7 +216,7 @@ function App() {
                 </p>
               </div>
             ) : (
-              <motion.div layout className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              <motion.div layout className="grid gap-4 sm:gap-5 sm:grid-cols-2 xl:grid-cols-3">
                 {auctions.map((auction) => (
                   <motion.div
                     key={auction.id}
