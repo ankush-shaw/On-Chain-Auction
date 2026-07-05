@@ -47,8 +47,8 @@ A decentralized, on-chain project bidding and auction platform built on **Stella
 
 We successfully gathered feedback from real testnet users to validate our decentralized bidding experience and gathered structured suggestions to refine the product.
 
-*   **📋 Feedback Form:** [Fill out the Google Form](https://docs.google.com/forms/d/e/YOUR_FORM_ID_HERE/viewform) *(insert form link)*
-*   **📊 Live Responses Database:** [View Responses Spreadsheet](https://docs.google.com/spreadsheets/d/YOUR_SPREADSHEET_ID_HERE/edit) *(insert spreadsheet link)*
+*   **📋 Feedback Form:** [Fill out the Google Form](https://docs.google.com/forms/d/e/1FAIpQLSfa45WCSx3aEYmMvyQZ4n-ZnO_2xJQUBZ9nzoFQ_b8zdR9UPQ/viewform?usp=sharing&ouid=104656030980064295821)
+*   **📊 Live Responses Database:** [View Responses Spreadsheet](https://docs.google.com/spreadsheets/d/1TpOJGbwcuay3qbAOZRUt4OgfbKvadTW553FGRyVml2Y/edit?usp=sharing)
 
 ### ✅ Verification of Testnet Activity
 
