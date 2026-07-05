@@ -9,6 +9,59 @@ A decentralized, on-chain project bidding and auction platform built on **Stella
 
 ---
 
+## 📐 System Architecture & Bidding Flow
+
+Below is the design of the OnChainAuction platform, illustrating how the React frontend interacts with multi-wallets and submits contract invocations to the Stellar Soroban network:
+
+```mermaid
+graph TD
+    %% Styling
+    classDef frontend fill:#082f49,stroke:#0284c7,stroke-width:2px,color:#fff;
+    classDef blockchain fill:#022c22,stroke:#059669,stroke-width:2px,color:#fff;
+    classDef wallet fill:#3b0764,stroke:#a855f7,stroke-width:2px,color:#fff;
+
+    %% Nodes
+    subgraph Frontend [Client Application - React/TS]
+        App[App.tsx Dashboard]:::frontend
+        Panel[ManagerPanel.tsx]:::frontend
+        Card[AuctionCard.tsx]:::frontend
+        SorobanService[soroban.ts Service Layer]:::frontend
+    end
+
+    subgraph WalletLayer [User Wallets]
+        Wallets{Multi-Wallet Connector}:::wallet
+        Freighter[Freighter Wallet]:::wallet
+        Albedo[Albedo Wallet]:::wallet
+        XBull[xBull Wallet]:::wallet
+        Hana[Hana Wallet]:::wallet
+    end
+
+    subgraph OnChain [Stellar Testnet Network]
+        RPC[Soroban RPC Node]:::blockchain
+        Contract[Soroban Auction Smart Contract]:::blockchain
+        SAC[Native XLM SAC Token Contract]:::blockchain
+    end
+
+    %% Flow/Connections
+    App --> Panel & Card
+    Panel -- "1. Create Listing" --> SorobanService
+    Card -- "2. Submit Bid / Settle" --> SorobanService
+    
+    SorobanService --> Wallets
+    Wallets --> Freighter & Albedo & XBull & Hana
+    
+    Wallets -- "3. Sign Transaction XDR" --> SorobanService
+    SorobanService -- "4. Submit Signed XDR" --> RPC
+    RPC -- "5. Invoke Contract Call" --> Contract
+
+    %% Contract Logic Flow
+    Contract -- "a. Lock current bid in escrow" --> SAC
+    Contract -- "b. Auto-refund previous bidder" --> SAC
+    Contract -- "c. Settle winner and transfer funds" --> SAC
+```
+
+---
+
 ## 📽️ Visual Walkthrough (App Preview)
 
 *(Add screenshots, GIFs, or embedded video links here to showcase your application)*
