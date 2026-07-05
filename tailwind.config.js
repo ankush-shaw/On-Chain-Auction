@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     screens: {
@@ -27,6 +28,13 @@ export default {
           800: '#065f8c',
           900: '#0a4f74',
           950: '#082f49',
+        },
+        cream: {
+          50:  '#fefcf8',  /* cards / panels */
+          100: '#faf6ef',  /* page background */
+          200: '#f2ead9',  /* secondary areas */
+          300: '#e8dbc5',  /* borders */
+          400: '#d5c4a3',  /* muted borders */
         },
       },
     },

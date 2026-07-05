@@ -83,31 +83,31 @@ export function AuctionCard({ auction, walletAddress, onConnect, onBid, onSettle
   };
 
   return (
-    <article className="rounded-lg border border-slate-800 bg-slate-950/80 p-4 sm:p-5 shadow-xl shadow-slate-950/20">
+    <article className="rounded-lg border border-cream-300 bg-cream-50 p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/80 dark:shadow-xl dark:shadow-slate-950/20">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="mb-3 flex items-center gap-2">
             <span className={`status-dot ${auction.status}`} />
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               {auction.isPreview ? 'preview' : auction.status}
             </span>
           </div>
-          <h3 className="text-lg sm:text-xl font-bold text-white leading-snug">{auction.title}</h3>
-          <p className="mt-2 text-sm leading-6 text-slate-400 line-clamp-3">{auction.description}</p>
+          <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug dark:text-white">{auction.title}</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-600 line-clamp-3 dark:text-slate-400">{auction.description}</p>
         </div>
-        <div className="rounded-md border border-cyan-400/20 bg-cyan-400/10 p-2.5 sm:p-3 text-cyan-200 shrink-0">
+        <div className="rounded-md border border-cyan-200 bg-cyan-50/50 p-2.5 sm:p-3 text-cyan-700 shrink-0 dark:border-cyan-400/20 dark:bg-cyan-400/10 dark:text-cyan-200">
           <Gavel size={20} />
         </div>
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
-        <div className="rounded-md bg-slate-900 p-3">
+        <div className="rounded-md bg-cream-200/50 p-3 dark:bg-slate-900">
           <p className="text-slate-500">Current bid</p>
-          <p className="mt-1 font-semibold text-white">{formatStroops(currentPrice)} XLM</p>
+          <p className="mt-1 font-semibold text-slate-900 dark:text-white">{formatStroops(currentPrice)} XLM</p>
         </div>
-        <div className="rounded-md bg-slate-900 p-3">
+        <div className="rounded-md bg-cream-200/50 p-3 dark:bg-slate-900">
           <p className="text-slate-500">Minimum next</p>
-          <p className="mt-1 font-semibold text-white">{minimumBid} XLM</p>
+          <p className="mt-1 font-semibold text-slate-900 dark:text-white">{minimumBid} XLM</p>
         </div>
       </div>
 
@@ -118,20 +118,24 @@ export function AuctionCard({ auction, walletAddress, onConnect, onBid, onSettle
             {auction.seller.slice(0, 6)}...{auction.seller.slice(-6)}
           </span>
         </span>
-        <span className="flex items-center gap-1.5 text-slate-300 shrink-0">
+        <span className="flex items-center gap-1.5 text-slate-700 shrink-0 dark:text-slate-300">
           <Clock size={13} />
           {timeLabel}
         </span>
       </div>
 
       {auction.highestBidder && (
-        <div className="mt-4 flex items-center gap-2 rounded-md border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-xs text-amber-100">
+        <div className="mt-4 flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-100">
           <Trophy size={14} />
           Leading bidder: {auction.highestBidder.slice(0, 6)}...{auction.highestBidder.slice(-4)}
         </div>
       )}
 
-      {error && <p className="mt-4 rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-300">{error}</p>}
+      {error && (
+        <p className="mt-4 rounded-md bg-red-100 px-3 py-2 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-300">
+          {error}
+        </p>
+      )}
 
       {auction.status === 'live' ? (
         <div className="mt-5 flex flex-col xs:flex-row gap-2">
@@ -140,7 +144,7 @@ export function AuctionCard({ auction, walletAddress, onConnect, onBid, onSettle
             onChange={(event) => setBidAmount(event.target.value)}
             placeholder={`${minimumBid} XLM`}
             disabled={!canTransact}
-            className="min-w-0 flex-1 rounded-md border border-slate-700 bg-slate-900 px-3 py-3 text-sm text-white outline-none transition focus:border-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
+            className="min-w-0 flex-1 rounded-md border border-cream-300 bg-cream-50 px-3 py-3 text-sm text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:border-cyan-400"
           />
           <button onClick={submitBid} disabled={busy !== null || !canTransact} className="btn-primary stable-button shrink-0">
             {busy === 'bid' ? <Loader2 className="animate-spin" size={18} /> : <Gavel size={18} />}
