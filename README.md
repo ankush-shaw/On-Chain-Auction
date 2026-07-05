@@ -35,9 +35,9 @@ A decentralized, on-chain project bidding and auction platform built on **Stella
 | **Live Demo** | [https://onchain-auction.vercel.app/](https://onchain-auction.vercel.app/)  |
 | **Demo Video** | [Watch Demo Video](https://drive.google.com/file/d/YOUR_VIDEO_ID_HERE/view?usp=sharing) *(insert link to screen recording)* |
 | **Pitch Deck / PPT** | [View Pitch Deck](https://docs.google.com/presentation/d/YOUR_PPT_ID_HERE/edit?usp=sharing) *(insert link to deck)* |
-| **Contract ID** | `VITE_AUCTION_CONTRACT_ID` *(insert contract address)* |
+| **Contract ID** | `CAFY23YICS2EP3QXMPGBPGBN5UMNERVOE453BEIZDYNNW2JXLDKVX5SY` |
 | **Network** | Stellar Testnet |
-| **Explorer** | [View on Stellar.Expert](https://stellar.expert/explorer/testnet/contract/YOUR_CONTRACT_ID_HERE) |
+| **Explorer** | [View on Stellar.Expert](https://stellar.expert/explorer/testnet/contract/CAFY23YICS2EP3QXMPGBPGBN5UMNERVOE453BEIZDYNNW2JXLDKVX5SY) |
 | **Bidding Token** | Native XLM |
 | **Commits** | Meaningful commits with structured history — [View Git Commit History](https://github.com/ankush-shaw/On-Chain-Auction/commits/main) |
 
@@ -54,7 +54,7 @@ We successfully gathered feedback from real testnet users to validate our decent
 
 Users interacted directly with our deployed Soroban contract on the Stellar Testnet. You can inspect all verified on-chain transactions and call history at:
 
-**[→ View Deployed Contract on Stellar.Expert Explorer](https://stellar.expert/explorer/testnet/contract/YOUR_CONTRACT_ID_HERE)**
+**[→ View Deployed Contract on Stellar.Expert Explorer](https://stellar.expert/explorer/testnet/contract/CAFY23YICS2EP3QXMPGBPGBN5UMNERVOE453BEIZDYNNW2JXLDKVX5SY)**
 
 ---
 
