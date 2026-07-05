@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ExternalLink, Github, RefreshCw } from 'lucide-react';
+import { ExternalLink, FileText, Github, RefreshCw, ShieldCheck, Users } from 'lucide-react';
 import { AuctionCard } from './components/AuctionCard';
 import { ManagerPanel } from './components/ManagerPanel';
 import { useWallet } from './hooks/useWallet';
@@ -153,15 +153,14 @@ function App() {
         <section className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr] lg:items-start">
           <div className="py-2 sm:py-4">
             <div className="max-w-3xl">
-              <p className="text-xs sm:text-sm font-semibold uppercase tracking-[0.22em] text-emerald-300">
-                Project auctions with wallet-settled bidding
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-300">
+                On-chain project auctions · Stellar Soroban
               </p>
-              <h2 className="mt-3 sm:mt-4 text-3xl sm:text-4xl font-black leading-tight text-white md:text-5xl lg:text-6xl">
-                List a project, open the bidding, settle the winner on-chain.
+              <h2 className="mt-3 text-3xl sm:text-4xl font-black leading-tight text-white md:text-5xl lg:text-6xl">
+                Bid on projects.<br className="hidden sm:block" /> Settle on-chain.
               </h2>
-              <p className="mt-4 sm:mt-5 max-w-2xl text-base sm:text-lg leading-7 sm:leading-8 text-slate-400">
-                Managers publish project opportunities to a Soroban contract. Public bidders connect a Stellar wallet,
-                submit XLM-backed bids, and the highest bidder wins when the auction closes.
+              <p className="hidden sm:block mt-4 max-w-xl text-base leading-7 text-slate-400">
+                List projects, collect XLM bids, and settle the winner trustlessly via Soroban smart contracts.
               </p>
             </div>
 
@@ -239,16 +238,58 @@ function App() {
           </AnimatePresence>
         </section>
 
-        <footer className="mt-12 flex flex-col gap-4 border-t border-slate-800 py-6 text-sm text-slate-500 md:flex-row md:items-center md:justify-between">
-          <span>OnChainAuction runs on Stellar Soroban testnet contracts.</span>
+        {/* ── Feature cards ── */}
+        <section className="mt-14 sm:mt-20">
+          <div className="grid gap-4 sm:grid-cols-3">
+            {[
+              {
+                icon: <FileText size={22} />,
+                title: 'Transparent Listings',
+                body: 'Every project is stored immutably on Stellar Soroban — fully on-chain and publicly verifiable.',
+              },
+              {
+                icon: <ShieldCheck size={22} />,
+                title: 'Trustless Settlement',
+                body: 'Winning bids are settled automatically by the smart contract. No admin, no intermediaries.',
+              },
+              {
+                icon: <Users size={22} />,
+                title: 'Permissionless Bidding',
+                body: 'Anyone with a Stellar wallet can connect and bid. No sign-up, no KYC — just your keys.',
+              },
+            ].map(({ icon, title, body }) => (
+              <div
+                key={title}
+                className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 flex flex-col gap-4"
+              >
+                <div className="w-11 h-11 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                  {icon}
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-base">{title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-400">{body}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Footer bar ── */}
+        <footer className="mt-10 flex flex-col gap-3 border-t border-slate-800 py-5 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+            <span className="text-slate-400 font-medium">Soroban Testnet</span>
+            <span className="text-slate-600">·</span>
+            <span className="font-mono text-slate-500">v1.0.0</span>
+          </div>
           <div className="flex flex-wrap items-center gap-5">
             <a
               href="https://github.com/ankush-shaw/On-Chain-Auction"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 hover:text-white"
+              className="inline-flex items-center gap-2 hover:text-white transition-colors"
             >
-              <Github size={16} />
+              <Github size={15} />
               GitHub
             </a>
             {CONTRACT_ID && (
@@ -256,9 +297,9 @@ function App() {
                 href={`https://stellar.expert/explorer/testnet/contract/${CONTRACT_ID}`}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 hover:text-cyan-200"
+                className="inline-flex items-center gap-2 hover:text-cyan-200 transition-colors"
               >
-                Contract <ExternalLink size={14} />
+                View Contract <ExternalLink size={13} />
               </a>
             )}
           </div>
