@@ -11,8 +11,6 @@ A decentralized, on-chain project bidding and auction platform built on **Stella
 
 ## 📽️ Visual Walkthrough (App Preview)
 
-*(Add screenshots, GIFs, or embedded video links here to showcase your application)*
-
 #### ☀️ Light (Cream) Mode & Bidding Board
 
 <img width="1898" height="872" alt="image" src="https://github.com/user-attachments/assets/8e2f696d-ec76-413b-abf2-7a8316cf51c8" />
