@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ExternalLink, FileText, Github, Moon, RefreshCw, ShieldCheck, Sun, Users } from 'lucide-react';
+import { ExternalLink, FileText, Github, LayoutDashboard, Moon, RefreshCw, ShieldCheck, Sun, Users } from 'lucide-react';
 import { AuctionCard } from './components/AuctionCard';
 import { ManagerPanel } from './components/ManagerPanel';
+import { UserDashboard } from './components/UserDashboard';
 import { useWallet } from './hooks/useWallet';
 import { useTheme } from './hooks/useTheme';
 import { demoAuctions } from './data/demoAuctions';
@@ -32,6 +33,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<'board' | 'dashboard'>('board');
 
   const contractReady = isContractConfigured();
 
@@ -131,6 +133,21 @@ function App() {
               {isDark ? <Sun size={17} /> : <Moon size={17} />}
             </button>
 
+            {/* My Dashboard button — only when wallet connected */}
+            {wallet.isConnected && wallet.address && (
+              <button
+                onClick={() => setActiveSection(s => s === 'dashboard' ? 'board' : 'dashboard')}
+                className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-all stable-button ${
+                  activeSection === 'dashboard'
+                    ? 'border-indigo-400 bg-indigo-50 text-indigo-700 dark:border-indigo-500/50 dark:bg-indigo-500/15 dark:text-indigo-300'
+                    : 'border-cream-300 bg-cream-50 text-slate-600 hover:border-indigo-300 hover:text-indigo-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-indigo-500 dark:hover:text-indigo-400'
+                }`}
+              >
+                <LayoutDashboard size={15} />
+                {activeSection === 'dashboard' ? 'Project Board' : 'My Dashboard'}
+              </button>
+            )}
+
             {wallet.isConnected && wallet.address ? (
               <>
                 <div className="rounded-md border border-cream-300 bg-cream-50 px-3 py-2 text-sm min-w-0 max-w-full dark:border-slate-700 dark:bg-slate-900">
@@ -210,52 +227,80 @@ function App() {
           />
         </section>
 
-        {/* ── Project Board ── */}
-        <section className="mt-8 sm:mt-10">
-          <div className="mb-4 sm:mb-5 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Project Board</h2>
-              <p className="mt-1 text-xs sm:text-sm text-slate-500">Live and recently ended auctions for public bidding.</p>
-            </div>
-            <button onClick={refreshAuctions} disabled={loading} className="btn-ghost stable-button">
-              <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
-              Refresh
-            </button>
-          </div>
+        {/* ── Project Board OR User Dashboard ── */}
+        <AnimatePresence mode="wait">
+          {activeSection === 'dashboard' && wallet.address ? (
+            <motion.div
+              key="dashboard"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.2 }}
+            >
+              <UserDashboard
+                auctions={auctions}
+                walletAddress={wallet.address}
+                contractReady={contractReady}
+                onSettle={handleSettle}
+                onBid={handleBid}
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="board"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.2 }}
+            >
+              <section className="mt-8 sm:mt-10">
+                <div className="mb-4 sm:mb-5 flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Project Board</h2>
+                    <p className="mt-1 text-xs sm:text-sm text-slate-500">Live and recently ended auctions for public bidding.</p>
+                  </div>
+                  <button onClick={refreshAuctions} disabled={loading} className="btn-ghost stable-button">
+                    <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+                    Refresh
+                  </button>
+                </div>
 
-          <AnimatePresence mode="popLayout">
-            {auctions.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-cream-300 bg-cream-50/60 px-6 py-12 text-center dark:border-slate-700 dark:bg-slate-950/60">
-                <p className="text-lg font-semibold text-slate-900 dark:text-white">No auctions on the board yet</p>
-                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                  {contractReady
-                    ? 'Connect your wallet and list the first project from the manager console.'
-                    : 'Deploy the contract to start listing real projects on-chain.'}
-                </p>
-              </div>
-            ) : (
-              <motion.div layout className="grid gap-4 sm:gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                {auctions.map((auction) => (
-                  <motion.div
-                    key={auction.id}
-                    layout
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -16 }}
-                  >
-                    <AuctionCard
-                      auction={auction}
-                      walletAddress={wallet.address}
-                      onConnect={() => connect('freighter')}
-                      onBid={handleBid}
-                      onSettle={handleSettle}
-                    />
-                  </motion.div>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </section>
+                <AnimatePresence mode="popLayout">
+                  {auctions.length === 0 ? (
+                    <div className="rounded-lg border border-dashed border-cream-300 bg-cream-50/60 px-6 py-12 text-center dark:border-slate-700 dark:bg-slate-950/60">
+                      <p className="text-lg font-semibold text-slate-900 dark:text-white">No auctions on the board yet</p>
+                      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                        {contractReady
+                          ? 'Connect your wallet and list the first project from the manager console.'
+                          : 'Deploy the contract to start listing real projects on-chain.'}
+                      </p>
+                    </div>
+                  ) : (
+                    <motion.div layout className="grid gap-4 sm:gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                      {auctions.map((auction) => (
+                        <motion.div
+                          key={auction.id}
+                          layout
+                          initial={{ opacity: 0, y: 16 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -16 }}
+                        >
+                          <AuctionCard
+                            auction={auction}
+                            walletAddress={wallet.address}
+                            onConnect={() => connect('freighter')}
+                            onBid={handleBid}
+                            onSettle={handleSettle}
+                          />
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </section>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* ── Feature cards ── */}
         <section className="mt-14 sm:mt-20">
