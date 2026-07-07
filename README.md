@@ -24,6 +24,10 @@ A decentralized, on-chain project bidding and auction platform built on **Stella
 
 <img width="276" height="585" alt="image" src="https://github.com/user-attachments/assets/d43f72a3-b390-4a3d-8683-577b983c6c5c" />
 
+### Stellar Expert
+
+<img width="1901" height="872" alt="image" src="https://github.com/user-attachments/assets/fd431359-40e2-4288-8e59-b15d528ae9a3" />
+
 ---
 
 ## 🏆 Project Submission Details
