@@ -2,6 +2,12 @@ import type { AuctionListing } from '../types';
 
 const now = Math.floor(Date.now() / 1000);
 
+/**
+ * A fixed demo bidder address used in preview mode so the dashboard
+ * shows realistic data without a live wallet connection.
+ */
+export const DEMO_BIDDER_ADDRESS = 'GBBIG4HLPGTLG6BH6YREVWJXEQ4NX74HTD444JD6A6XYS7DOFL2J6DEI';
+
 export const demoAuctions: AuctionListing[] = [
   {
     id: 101,
@@ -42,10 +48,10 @@ export const demoAuctions: AuctionListing[] = [
       'A focused audit slot for one Soroban contract, including issue notes, exploit narratives, and remediation checks.',
     startingBid: '900000000',
     highestBid: '1250000000',
-    highestBidder: 'GCPKMXDRZ2K0T7URFV3WQPQCOBJ57YPFHMSB4D444JD6A6XYS7DOFL2J6',
+    highestBidder: DEMO_BIDDER_ADDRESS,
     token: 'XLM',
     endTime: now - 3_600,
-    settled: false,
-    status: 'ended',
+    settled: true,
+    status: 'settled',
   },
 ];

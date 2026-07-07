@@ -64,6 +64,22 @@ function App() {
     refreshAuctions();
   }, [refreshAuctions]);
 
+  // Auto-dismiss success toast after 4 seconds
+  useEffect(() => {
+    if (!success) return;
+    const t = setTimeout(() => setSuccess(null), 4000);
+    return () => clearTimeout(t);
+  }, [success]);
+
+  // Auto-navigate to dashboard when wallet connects
+  useEffect(() => {
+    if (wallet.isConnected && wallet.address) {
+      setActiveSection('dashboard');
+    } else {
+      setActiveSection('board');
+    }
+  }, [wallet.isConnected, wallet.address]);
+
   const stats = useMemo(() => {
     const live = auctions.filter((auction) => auction.status === 'live').length;
     const totalBids = auctions.filter((auction) => auction.highestBid !== '0').length;
