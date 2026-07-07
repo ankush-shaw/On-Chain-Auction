@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, Gavel, LayoutDashboard, ListOrdered, Loader2, ShieldCheck, Trophy } from 'lucide-react';
+import { AlertCircle, Clock, Gavel, LayoutDashboard, ListOrdered, Loader2, ShieldCheck, Trophy } from 'lucide-react';
 import type { AuctionListing } from '../types';
 import { useDashboard } from '../hooks/useDashboard';
 import { BidStatusBadge, deriveBidStatus } from './BidStatusBadge';
@@ -11,6 +11,7 @@ type DashTab = 'bids' | 'listings';
 interface UserDashboardProps {
   auctions: AuctionListing[];
   walletAddress: string;
+  contractReady: boolean;
   onSettle: (auctionId: number) => Promise<void>;
   onBid: (auctionId: number, amountXlm: string) => Promise<void>;
 }
@@ -186,13 +187,21 @@ function EmptyState({ icon, title, body }: { icon: React.ReactNode; title: strin
 }
 
 // ── Main component ─────────────────────────────────────────────────────────
-export function UserDashboard({ auctions, walletAddress, onSettle, onBid }: UserDashboardProps) {
+export function UserDashboard({ auctions, walletAddress, contractReady, onSettle, onBid }: UserDashboardProps) {
   const [activeTab, setActiveTab] = useState<DashTab>('bids');
   const { myBids, myListings, dashStats } = useDashboard(auctions, walletAddress);
 
-  const tabs: { id: DashTab; label: string; count: number; icon: React.ReactNode }[] = [
+  // Count listings that need settlement (ended, has winning bid, not yet settled)
+  const needsSettlement = useMemo(
+    () => myListings.filter(
+      (a) => !a.settled && a.status === 'ended' && a.highestBid !== '0' && a.highestBidder
+    ).length,
+    [myListings]
+  );
+
+  const tabs: { id: DashTab; label: string; count: number; badge?: number; icon: React.ReactNode }[] = [
     { id: 'bids', label: 'My Bids', count: myBids.length, icon: <Gavel size={15} /> },
-    { id: 'listings', label: 'My Listings', count: myListings.length, icon: <ListOrdered size={15} /> },
+    { id: 'listings', label: 'My Listings', count: myListings.length, badge: needsSettlement, icon: <ListOrdered size={15} /> },
   ];
 
   return (
@@ -208,12 +217,20 @@ export function UserDashboard({ auctions, walletAddress, onSettle, onBid }: User
         </div>
       </div>
 
+      {/* Preview mode notice */}
+      {!contractReady && (
+        <div className="mb-5 flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2.5 text-sm text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-200">
+          <AlertCircle size={15} className="shrink-0" />
+          Preview mode — connect a deployed contract to see your real on-chain bids and listings here.
+        </div>
+      )}
+
       {/* Stats row */}
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatTile value={dashStats.activeBids} label="Active Bids" accent="text-cyan-600 dark:text-cyan-400" />
         <StatTile value={dashStats.wonAuctions} label="Auctions Won" accent="text-amber-600 dark:text-amber-400" />
         <StatTile value={dashStats.activeListings} label="Live Listings" accent="text-emerald-600 dark:text-emerald-400" />
-        <StatTile value={dashStats.settledListings} label="Settled" accent="text-slate-600 dark:text-slate-400" />
+        <StatTile value={needsSettlement} label="Needs Settlement" accent="text-orange-600 dark:text-orange-400" />
       </div>
 
       {/* Tab bar */}
@@ -222,7 +239,7 @@ export function UserDashboard({ auctions, walletAddress, onSettle, onBid }: User
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
+            className={`relative flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
               activeTab === tab.id
                 ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-white'
                 : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
@@ -239,6 +256,12 @@ export function UserDashboard({ auctions, walletAddress, onSettle, onBid }: User
             >
               {tab.count}
             </span>
+            {/* Urgent settlement badge */}
+            {tab.badge !== undefined && tab.badge > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-orange-500 text-[10px] font-black text-white">
+                {tab.badge}
+              </span>
+            )}
           </button>
         ))}
       </div>
