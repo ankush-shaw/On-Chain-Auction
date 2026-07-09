@@ -14,16 +14,52 @@ import { requestAccess, signTransaction } from '@stellar/freighter-api';
 import albedo from '@albedo-link/intent';
 import type { AuctionListing, AuctionStatus } from '../types';
 
-export const CONTRACT_ID = import.meta.env.VITE_AUCTION_CONTRACT_ID ?? '';
-export const NETWORK_PASSPHRASE = Networks.TESTNET;
-export const RPC_URL = import.meta.env.VITE_STELLAR_RPC_URL ?? 'https://soroban-testnet.stellar.org';
-export const NATIVE_TOKEN =
-  import.meta.env.VITE_NATIVE_TOKEN_CONTRACT_ID ??
-  'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
-
-const server = new rpc.Server(RPC_URL);
-
 export type WalletType = 'freighter' | 'albedo' | 'xbull' | 'hana';
+export type StellarNetwork = 'testnet' | 'mainnet';
+
+type NetworkConfig = {
+  id: StellarNetwork;
+  label: string;
+  contractId: string;
+  explorerNetwork: 'testnet' | 'public';
+  freighterNetwork: 'TESTNET' | 'PUBLIC';
+  horizonUrl: string;
+  nativeToken: string;
+  networkPassphrase: string;
+  rpcUrl: string;
+};
+
+export const NETWORK_CONFIGS: Record<StellarNetwork, NetworkConfig> = {
+  testnet: {
+    id: 'testnet',
+    label: 'Testnet',
+    contractId: import.meta.env.VITE_AUCTION_CONTRACT_ID ?? '',
+    explorerNetwork: 'testnet',
+    freighterNetwork: 'TESTNET',
+    horizonUrl: import.meta.env.VITE_STELLAR_HORIZON_URL ?? 'https://horizon-testnet.stellar.org',
+    nativeToken:
+      import.meta.env.VITE_NATIVE_TOKEN_CONTRACT_ID ??
+      'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
+    networkPassphrase: Networks.TESTNET,
+    rpcUrl: import.meta.env.VITE_STELLAR_RPC_URL ?? 'https://soroban-testnet.stellar.org',
+  },
+  mainnet: {
+    id: 'mainnet',
+    label: 'Mainnet',
+    contractId: import.meta.env.VITE_MAINNET_AUCTION_CONTRACT_ID ?? '',
+    explorerNetwork: 'public',
+    freighterNetwork: 'PUBLIC',
+    horizonUrl: import.meta.env.VITE_STELLAR_MAINNET_HORIZON_URL ?? 'https://horizon.stellar.org',
+    nativeToken: import.meta.env.VITE_MAINNET_NATIVE_TOKEN_CONTRACT_ID ?? '',
+    networkPassphrase: Networks.PUBLIC,
+    rpcUrl: import.meta.env.VITE_STELLAR_MAINNET_RPC_URL ?? 'https://mainnet.sorobanrpc.com',
+  },
+};
+
+export const CONTRACT_ID = NETWORK_CONFIGS.testnet.contractId;
+export const NETWORK_PASSPHRASE = NETWORK_CONFIGS.testnet.networkPassphrase;
+export const RPC_URL = NETWORK_CONFIGS.testnet.rpcUrl;
+export const NATIVE_TOKEN = NETWORK_CONFIGS.testnet.nativeToken;
 
 export type CreateAuctionInput = {
   sellerAddress: string;
@@ -39,15 +75,25 @@ export type PlaceBidInput = {
   amountXlm: string;
 };
 
-export function isContractConfigured() {
-  return CONTRACT_ID.length > 0;
+export function getNetworkConfig(network: StellarNetwork = 'testnet') {
+  return NETWORK_CONFIGS[network];
 }
 
-function getAuctionContract() {
-  if (!isContractConfigured()) {
-    throw new Error('Auction contract is not configured. Set VITE_AUCTION_CONTRACT_ID after deploying the contract.');
+function getServer(network: StellarNetwork = 'testnet') {
+  return new rpc.Server(getNetworkConfig(network).rpcUrl);
+}
+
+export function isContractConfigured(network: StellarNetwork = 'testnet') {
+  const config = getNetworkConfig(network);
+  return config.contractId.length > 0 && config.nativeToken.length > 0;
+}
+
+function getAuctionContract(network: StellarNetwork = 'testnet') {
+  const config = getNetworkConfig(network);
+  if (!isContractConfigured(network)) {
+    throw new Error(`Auction contract is not configured for ${config.label}. Set the contract and native token environment values after deploying the contract.`);
   }
-  return new Contract(CONTRACT_ID);
+  return new Contract(config.contractId);
 }
 
 export async function connectWallet(type: WalletType = 'freighter'): Promise<string | null> {
@@ -123,23 +169,39 @@ async function signWithHana(xdr: string): Promise<string | null> {
   }
 }
 
-async function signWithAlbedo(xdr: string): Promise<string | null> {
+async function signWithHanaForNetwork(xdr: string, network: StellarNetwork): Promise<string | null> {
   try {
-    const res = await albedo.tx({ xdr, network: 'testnet' });
+    const hana = (window as any).hanaWallet?.stellar;
+    if (!hana) return null;
+    const result = await hana.signTransaction(xdr, { networkPassphrase: getNetworkConfig(network).networkPassphrase });
+    return result?.signedTxXdr || result || null;
+  } catch (e) {
+    console.error('[signWithHana] Error:', e);
+    return null;
+  }
+}
+
+async function signWithAlbedo(xdr: string, network: StellarNetwork = 'testnet'): Promise<string | null> {
+  try {
+    const res = await albedo.tx({ xdr, network: network === 'mainnet' ? 'public' : 'testnet' });
     return res.signed_envelope_xdr;
   } catch {
     return null;
   }
 }
 
-async function signTx(preparedXdr: string): Promise<string | null> {
+async function signTx(preparedXdr: string, network: StellarNetwork = 'testnet'): Promise<string | null> {
+  const config = getNetworkConfig(network);
   const walletType = localStorage.getItem('walletType') as WalletType | null;
 
-  if (walletType === 'albedo') return signWithAlbedo(preparedXdr);
+  if (walletType === 'albedo') return signWithAlbedo(preparedXdr, network);
   if (walletType === 'xbull') return signWithXBull(preparedXdr);
-  if (walletType === 'hana') return signWithHana(preparedXdr);
+  if (walletType === 'hana') return signWithHanaForNetwork(preparedXdr, network);
 
-  const signResult = await signTransaction(preparedXdr, { network: 'TESTNET' });
+  const signResult = await signTransaction(preparedXdr, {
+    network: config.freighterNetwork,
+    networkPassphrase: config.networkPassphrase,
+  });
   if (typeof signResult === 'object' && signResult !== null && 'error' in signResult) {
     console.error('[signTx] Freighter error:', (signResult as any).error);
     return null;
@@ -147,9 +209,9 @@ async function signTx(preparedXdr: string): Promise<string | null> {
   return typeof signResult === 'string' ? signResult : (signResult as any)?.signedTxXdr ?? null;
 }
 
-export async function getXlmBalance(address: string): Promise<string | null> {
+export async function getXlmBalance(address: string, network: StellarNetwork = 'testnet'): Promise<string | null> {
   try {
-    const response = await fetch(`https://horizon-testnet.stellar.org/accounts/${address}`);
+    const response = await fetch(`${getNetworkConfig(network).horizonUrl}/accounts/${address}`);
     if (!response.ok) return '0.00';
     const data = await response.json();
     const nativeBalance = data.balances.find((b: any) => b.asset_type === 'native');
@@ -159,44 +221,46 @@ export async function getXlmBalance(address: string): Promise<string | null> {
   }
 }
 
-export async function getNextAuctionId(): Promise<number> {
-  const count = await simulateCall('get_auction_count', []);
+export async function getNextAuctionId(network: StellarNetwork = 'testnet'): Promise<number> {
+  const count = await simulateCall(network, 'get_auction_count', []);
   const maxId = typeof count === 'number' ? count : 0;
   return maxId + 1;
 }
 
-export async function loadAuctions(): Promise<AuctionListing[]> {
-  if (!isContractConfigured()) return [];
+export async function loadAuctions(network: StellarNetwork = 'testnet'): Promise<AuctionListing[]> {
+  if (!isContractConfigured(network)) return [];
 
-  const count = await simulateCall('get_auction_count', []);
+  const count = await simulateCall(network, 'get_auction_count', []);
   const maxId = typeof count === 'number' ? count : 0;
   const auctions: AuctionListing[] = [];
 
   for (let id = 1; id <= maxId; id += 1) {
-    const value = await simulateCall('get_auction', [nativeToScVal(id, { type: 'u32' })]);
-    const listing = normalizeAuction(value);
+    const value = await simulateCall(network, 'get_auction', [nativeToScVal(id, { type: 'u32' })]);
+    const listing = normalizeAuction(value, network);
     if (listing) auctions.push(listing);
   }
 
   return auctions.sort((a, b) => b.id - a.id);
 }
 
-export async function createAuction(input: CreateAuctionInput): Promise<AuctionListing | null> {
-  const id = await getNextAuctionId();
+export async function createAuction(input: CreateAuctionInput, network: StellarNetwork = 'testnet'): Promise<AuctionListing | null> {
+  const config = getNetworkConfig(network);
+  const server = getServer(network);
+  const id = await getNextAuctionId(network);
   const startingBid = parseXlmToStroops(input.startingBidXlm);
   const durationSeconds = Math.max(1, Math.round(input.durationHours * 60 * 60));
-  const contract = getAuctionContract();
+  const contract = getAuctionContract(network);
   const account = await server.getAccount(input.sellerAddress);
 
   const tx = new TransactionBuilder(account, {
     fee: '1000000',
-    networkPassphrase: NETWORK_PASSPHRASE,
+    networkPassphrase: config.networkPassphrase,
   })
     .addOperation(
       contract.call(
         'create_auction',
         Address.fromString(input.sellerAddress).toScVal(),
-        Address.fromString(NATIVE_TOKEN).toScVal(),
+        Address.fromString(config.nativeToken).toScVal(),
         nativeToScVal(id, { type: 'u32' }),
         nativeToScVal(input.title, { type: 'string' }),
         nativeToScVal(input.description, { type: 'string' }),
@@ -207,19 +271,21 @@ export async function createAuction(input: CreateAuctionInput): Promise<AuctionL
     .setTimeout(30)
     .build();
 
-  await submitSignedTransaction(tx);
-  const created = await simulateCall('get_auction', [nativeToScVal(id, { type: 'u32' })]);
-  return normalizeAuction(created);
+  await submitSignedTransaction(tx, network);
+  const created = await simulateCall(network, 'get_auction', [nativeToScVal(id, { type: 'u32' })]);
+  return normalizeAuction(created, network);
 }
 
-export async function placeBid(input: PlaceBidInput): Promise<AuctionListing | null> {
+export async function placeBid(input: PlaceBidInput, network: StellarNetwork = 'testnet'): Promise<AuctionListing | null> {
+  const config = getNetworkConfig(network);
+  const server = getServer(network);
   const amount = parseXlmToStroops(input.amountXlm);
-  const contract = getAuctionContract();
+  const contract = getAuctionContract(network);
   const account = await server.getAccount(input.bidderAddress);
 
   const tx = new TransactionBuilder(account, {
     fee: '1000000',
-    networkPassphrase: NETWORK_PASSPHRASE,
+    networkPassphrase: config.networkPassphrase,
   })
     .addOperation(
       contract.call(
@@ -232,30 +298,34 @@ export async function placeBid(input: PlaceBidInput): Promise<AuctionListing | n
     .setTimeout(30)
     .build();
 
-  await submitSignedTransaction(tx);
-  const updated = await simulateCall('get_auction', [nativeToScVal(input.auctionId, { type: 'u32' })]);
-  return normalizeAuction(updated);
+  await submitSignedTransaction(tx, network);
+  const updated = await simulateCall(network, 'get_auction', [nativeToScVal(input.auctionId, { type: 'u32' })]);
+  return normalizeAuction(updated, network);
 }
 
-export async function settleAuction(auctionId: number, callerAddress: string): Promise<AuctionListing | null> {
-  const contract = getAuctionContract();
+export async function settleAuction(auctionId: number, callerAddress: string, network: StellarNetwork = 'testnet'): Promise<AuctionListing | null> {
+  const config = getNetworkConfig(network);
+  const server = getServer(network);
+  const contract = getAuctionContract(network);
   const account = await server.getAccount(callerAddress);
 
   const tx = new TransactionBuilder(account, {
     fee: '1000000',
-    networkPassphrase: NETWORK_PASSPHRASE,
+    networkPassphrase: config.networkPassphrase,
   })
     .addOperation(contract.call('settle_auction', nativeToScVal(auctionId, { type: 'u32' })))
     .setTimeout(30)
     .build();
 
-  await submitSignedTransaction(tx);
-  const settled = await simulateCall('get_auction', [nativeToScVal(auctionId, { type: 'u32' })]);
-  return normalizeAuction(settled);
+  await submitSignedTransaction(tx, network);
+  const settled = await simulateCall(network, 'get_auction', [nativeToScVal(auctionId, { type: 'u32' })]);
+  return normalizeAuction(settled, network);
 }
 
-async function simulateCall(funcName: string, args: any[]): Promise<any> {
+async function simulateCall(network: StellarNetwork, funcName: string, args: any[]): Promise<any> {
   try {
+    const config = getNetworkConfig(network);
+    const server = getServer(network);
     const dummyPK = 'GBBIG4HLPGTLG6BH6YREVWJXEQ4NX74HTD444JD6A6XYS7DOFL2J6DEI';
     let account;
     try {
@@ -270,9 +340,9 @@ async function simulateCall(funcName: string, args: any[]): Promise<any> {
 
     const tx = new TransactionBuilder(account, {
       fee: BASE_FEE,
-      networkPassphrase: NETWORK_PASSPHRASE,
+      networkPassphrase: config.networkPassphrase,
     })
-      .addOperation(getAuctionContract().call(funcName, ...args))
+      .addOperation(getAuctionContract(network).call(funcName, ...args))
       .setTimeout(30)
       .build();
 
@@ -287,17 +357,19 @@ async function simulateCall(funcName: string, args: any[]): Promise<any> {
   }
 }
 
-async function submitSignedTransaction(tx: any): Promise<string> {
+async function submitSignedTransaction(tx: any, network: StellarNetwork): Promise<string> {
+  const config = getNetworkConfig(network);
+  const server = getServer(network);
   const prepared = await server.prepareTransaction(tx);
-  const signedXdr = await signTx(prepared.toXDR());
+  const signedXdr = await signTx(prepared.toXDR(), network);
   if (!signedXdr) throw new Error('Wallet did not return a signed transaction.');
 
-  const sent = await server.sendTransaction(TransactionBuilder.fromXDR(signedXdr, NETWORK_PASSPHRASE));
+  const sent = await server.sendTransaction(TransactionBuilder.fromXDR(signedXdr, config.networkPassphrase));
   const hash = (sent as any).hash;
   if (!hash) throw new Error('Transaction submission failed.');
 
   for (let i = 0; i < 30; i += 1) {
-    const res = await fetch(RPC_URL, {
+    const res = await fetch(config.rpcUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -332,8 +404,9 @@ export function formatStroops(stroops: string | number | bigint): string {
   return fraction ? `${whole}.${fraction}` : whole.toString();
 }
 
-function normalizeAuction(value: any): AuctionListing | null {
+function normalizeAuction(value: any, network: StellarNetwork = 'testnet'): AuctionListing | null {
   if (!value) return null;
+  const config = getNetworkConfig(network);
   const record = value instanceof Map ? Object.fromEntries(value) : value;
   const endTime = Number(record.end_time ?? record.endTime ?? 0);
   const now = Math.floor(Date.now() / 1000);
@@ -350,7 +423,7 @@ function normalizeAuction(value: any): AuctionListing | null {
     startingBid: String(record.starting_bid ?? record.startingBid ?? '0'),
     highestBid,
     highestBidder,
-    token: normalizeAddress(record.token) ?? NATIVE_TOKEN,
+    token: normalizeAddress(record.token) ?? config.nativeToken,
     endTime,
     settled,
     status,
