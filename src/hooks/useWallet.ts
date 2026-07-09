@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { connectWallet, isWalletInstalled, getXlmBalance } from '../services/soroban';
-import type { WalletType } from '../services/soroban';
+import type { StellarNetwork, WalletType } from '../services/soroban';
 import type { WalletState } from '../types';
 
 /**
@@ -15,7 +15,7 @@ export function useWallet() {
     error: null,
   });
 
-  const connect = useCallback(async (type: WalletType = 'freighter') => {
+  const connect = useCallback(async (type: WalletType = 'freighter', network: StellarNetwork = 'testnet') => {
     setWallet((prev) => ({ ...prev, isConnecting: true, error: null }));
 
     try {
@@ -23,7 +23,8 @@ export function useWallet() {
 
       if (address) {
         localStorage.setItem('walletType', type);
-        const balance = await getXlmBalance(address);
+        localStorage.setItem('walletNetwork', network);
+        const balance = await getXlmBalance(address, network);
         setWallet({
           address,
           balance,
