@@ -84,6 +84,11 @@ Based on structured feedback collected during initial user onboarding phases, we
 *   **What We Did:** Optimized the Rust Soroban contract's `place_bid` method. Whenever a higher bid is registered, the contract instantly initiates a transfer callback returning the previous bidder's funds synchronously in the same transaction block.
 *   **Git Commit:** [chore: update contract bindings & frontend wrappers](https://github.com/ankush-shaw/On-Chain-Auction/commit/caa45d5)
 
+### 🔹 Iteration 5: Mainnet Network Toggle
+*   **Feedback Received:** *"The app only shows Testnet, so it is unclear whether the auction flow can be prepared for Mainnet users."*
+*   **What We Did:** Added a compact Testnet/Mainnet toggle in the header and wired the selected network through wallet balance checks, transaction signing, RPC calls, contract readiness, preview messaging, and Stellar.Expert explorer links. Mainnet stays in preview mode until its contract and native token environment values are configured.
+*   **Git Commit:** [feat: add testnet mainnet toggle](https://github.com/ankush-shaw/On-Chain-Auction/commit/e2d8e4e4a8f0828877eba3fc9b5913133b3ea64c)
+
 ---
 
 ## 🚀 Future Evolution Plan (Next Phase)
