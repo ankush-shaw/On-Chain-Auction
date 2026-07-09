@@ -38,7 +38,7 @@ A decentralized, on-chain project bidding and auction platform built on **Stella
 | **Demo Video** | [Watch Demo Video](https://drive.google.com/file/d/14AbMnbf_OQNQ7jH9q6hOr0vyzt52T1pG/view?usp=sharing)|
 | **Pitch Deck / PPT** | [View Pitch Deck](https://docs.google.com/presentation/d/1b2FdjQvPswGlY00AivnkJaLB3KKDDh-A/edit?usp=sharing&ouid=104656030980064295821&rtpof=true&sd=true) |
 | **Contract ID** | `CAFY23YICS2EP3QXMPGBPGBN5UMNERVOE453BEIZDYNNW2JXLDKVX5SY` |
-| **Network** | Stellar Testnet |
+| **Network** | Stellar Testnet, with an app-level Mainnet toggle |
 | **Explorer** | [View on Stellar.Expert](https://stellar.expert/explorer/testnet/contract/CAFY23YICS2EP3QXMPGBPGBN5UMNERVOE453BEIZDYNNW2JXLDKVX5SY) |
 | **Bidding Token** | Native XLM |
 | **Commits** | Meaningful commits with structured history — [View Git Commit History](https://github.com/ankush-shaw/On-Chain-Auction/commits/main) |
@@ -191,8 +191,16 @@ Create a `.env` file in the root of the project to declare your environment para
 ```env
 VITE_AUCTION_CONTRACT_ID=YOUR_DEPLOYED_CONTRACT_ID
 VITE_STELLAR_RPC_URL=https://soroban-testnet.stellar.org
+VITE_STELLAR_HORIZON_URL=https://horizon-testnet.stellar.org
 VITE_NATIVE_TOKEN_CONTRACT_ID=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC
+
+VITE_MAINNET_AUCTION_CONTRACT_ID=YOUR_MAINNET_DEPLOYED_CONTRACT_ID
+VITE_STELLAR_MAINNET_RPC_URL=https://mainnet.sorobanrpc.com
+VITE_STELLAR_MAINNET_HORIZON_URL=https://horizon.stellar.org
+VITE_MAINNET_NATIVE_TOKEN_CONTRACT_ID=YOUR_MAINNET_NATIVE_XLM_CONTRACT_ID
 ```
+
+The header toggle switches the frontend between Testnet and Mainnet. Mainnet remains in preview mode until the Mainnet contract ID and native XLM token contract ID are configured.
 
 ### 3. Run the Frontend
 Launch the local dev server:
