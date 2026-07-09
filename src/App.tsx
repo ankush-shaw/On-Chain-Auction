@@ -9,10 +9,11 @@ import { useTheme } from './hooks/useTheme';
 import { demoAuctions } from './data/demoAuctions';
 import type { AuctionListing } from './types';
 import {
-  CONTRACT_ID,
   CreateAuctionInput,
+  StellarNetwork,
   WalletType,
   createAuction,
+  getNetworkConfig,
   isContractConfigured,
   loadAuctions,
   placeBid,
@@ -29,13 +30,18 @@ const walletOptions: { type: WalletType; label: string }[] = [
 function App() {
   const { wallet, connect, disconnect } = useWallet();
   const { isDark, toggle } = useTheme();
+  const [selectedNetwork, setSelectedNetwork] = useState<StellarNetwork>(() => {
+    const stored = localStorage.getItem('stellarNetwork');
+    return stored === 'mainnet' ? 'mainnet' : 'testnet';
+  });
   const [auctions, setAuctions] = useState<AuctionListing[]>([]);
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<'board' | 'dashboard'>('board');
 
-  const contractReady = isContractConfigured();
+  const networkConfig = getNetworkConfig(selectedNetwork);
+  const contractReady = isContractConfigured(selectedNetwork);
 
   const refreshAuctions = useCallback(async () => {
     setLoading(true);
@@ -43,26 +49,30 @@ function App() {
     try {
       if (!contractReady) {
         setAuctions(demoAuctions);
-        setNotice('Preview mode: deploy the auction contract and set VITE_AUCTION_CONTRACT_ID to enable on-chain listing and bidding.');
+        setNotice(`Preview mode: configure the ${networkConfig.label} contract and native token env values to enable on-chain listing and bidding.`);
         return;
       }
 
-      const onChainAuctions = await loadAuctions();
+      const onChainAuctions = await loadAuctions(selectedNetwork);
       setAuctions(onChainAuctions);
       if (onChainAuctions.length === 0) {
-        setNotice('No live auctions yet. Connect your wallet and list the first project.');
+        setNotice(`No live ${networkConfig.label} auctions yet. Connect your wallet and list the first project.`);
       }
     } catch (e: any) {
       setAuctions([]);
-      setNotice(e.message || 'Could not load on-chain auctions. Check your contract ID and RPC URL.');
+      setNotice(e.message || `Could not load ${networkConfig.label} auctions. Check your contract ID and RPC URL.`);
     } finally {
       setLoading(false);
     }
-  }, [contractReady]);
+  }, [contractReady, networkConfig.label, selectedNetwork]);
 
   useEffect(() => {
     refreshAuctions();
   }, [refreshAuctions]);
+
+  useEffect(() => {
+    localStorage.setItem('stellarNetwork', selectedNetwork);
+  }, [selectedNetwork]);
 
   // Auto-dismiss success toast after 4 seconds
   useEffect(() => {
@@ -88,9 +98,9 @@ function App() {
 
   const handleCreate = async (input: CreateAuctionInput) => {
     if (!contractReady) {
-      throw new Error('Deploy the auction contract and set VITE_AUCTION_CONTRACT_ID before listing projects.');
+      throw new Error(`Configure the ${networkConfig.label} auction contract before listing projects.`);
     }
-    const created = await createAuction(input);
+    const created = await createAuction(input, selectedNetwork);
     if (created) {
       setAuctions((current) => [created, ...current.filter((item) => item.id !== created.id)]);
       setSuccess(`Listed "${created.title}" on-chain.`);
@@ -100,13 +110,13 @@ function App() {
 
   const handleBid = async (auctionId: number, amountXlm: string) => {
     if (!contractReady) {
-      throw new Error('On-chain bidding requires a deployed auction contract.');
+      throw new Error(`On-chain bidding requires a configured ${networkConfig.label} auction contract.`);
     }
     if (!wallet.address) {
-      await connect('freighter');
+      await connect('freighter', selectedNetwork);
       return;
     }
-    const updated = await placeBid({ bidderAddress: wallet.address, auctionId, amountXlm });
+    const updated = await placeBid({ bidderAddress: wallet.address, auctionId, amountXlm }, selectedNetwork);
     if (updated) {
       setAuctions((current) => current.map((item) => (item.id === auctionId ? updated : item)));
       setSuccess(`Bid placed on "${updated.title}".`);
@@ -115,13 +125,13 @@ function App() {
 
   const handleSettle = async (auctionId: number) => {
     if (!contractReady) {
-      throw new Error('On-chain settlement requires a deployed auction contract.');
+      throw new Error(`On-chain settlement requires a configured ${networkConfig.label} auction contract.`);
     }
     if (!wallet.address) {
-      await connect('freighter');
+      await connect('freighter', selectedNetwork);
       return;
     }
-    const updated = await settleAuction(auctionId, wallet.address);
+    const updated = await settleAuction(auctionId, wallet.address, selectedNetwork);
     if (updated) {
       setAuctions((current) => current.map((item) => (item.id === auctionId ? updated : item)));
       setSuccess(`Auction "${updated.title}" settled. Winning bid sent to seller.`);
@@ -135,7 +145,7 @@ function App() {
       <div className="border-b border-cream-300 bg-cream-100/90 sticky top-0 z-50 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-950/90">
         <header className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:px-5 sm:py-5 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-600 dark:text-cyan-300">Stellar Testnet</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-600 dark:text-cyan-300">Stellar {networkConfig.label}</p>
             <h1 className="mt-1 text-2xl font-black tracking-normal text-slate-900 dark:text-white sm:text-3xl md:text-4xl">OnChainAuction</h1>
           </div>
 
@@ -182,7 +192,7 @@ function App() {
                 {walletOptions.map((option) => (
                   <button
                     key={option.type}
-                    onClick={() => connect(option.type)}
+                    onClick={() => connect(option.type, selectedNetwork)}
                     disabled={wallet.isConnecting}
                     className="btn-ghost stable-button"
                   >
@@ -238,7 +248,7 @@ function App() {
           <ManagerPanel
             walletAddress={wallet.address}
             contractReady={contractReady}
-            onConnect={() => connect('freighter')}
+            onConnect={() => connect('freighter', selectedNetwork)}
             onCreate={handleCreate}
           />
         </section>
@@ -304,7 +314,7 @@ function App() {
                           <AuctionCard
                             auction={auction}
                             walletAddress={wallet.address}
-                            onConnect={() => connect('freighter')}
+                            onConnect={() => connect('freighter', selectedNetwork)}
                             onBid={handleBid}
                             onSettle={handleSettle}
                           />
@@ -358,7 +368,7 @@ function App() {
         <footer className="mt-10 flex flex-col gap-3 border-t border-cream-300 py-5 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-            <span className="text-slate-600 font-medium dark:text-slate-400">Soroban Testnet</span>
+            <span className="text-slate-600 font-medium dark:text-slate-400">Soroban {networkConfig.label}</span>
             <span className="text-slate-400 dark:text-slate-600">·</span>
             <span className="font-mono text-slate-500">v1.0.0</span>
           </div>
@@ -372,9 +382,9 @@ function App() {
               <Github size={15} />
               GitHub
             </a>
-            {CONTRACT_ID && (
+            {networkConfig.contractId && (
               <a
-                href={`https://stellar.expert/explorer/testnet/contract/${CONTRACT_ID}`}
+                href={`https://stellar.expert/explorer/${networkConfig.explorerNetwork}/contract/${networkConfig.contractId}`}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 hover:text-cyan-700 transition-colors dark:hover:text-cyan-200"
