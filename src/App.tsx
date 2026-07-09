@@ -138,6 +138,16 @@ function App() {
     }
   };
 
+  const handleNetworkChange = (network: StellarNetwork) => {
+    if (network === selectedNetwork) return;
+    setSelectedNetwork(network);
+    setAuctions([]);
+    setNotice(null);
+    setSuccess(null);
+    disconnect();
+    setActiveSection('board');
+  };
+
   return (
     <div className="min-h-screen bg-cream-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300">
 
@@ -150,6 +160,49 @@ function App() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2 rounded-md border border-cream-300 bg-cream-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
+              <button
+                type="button"
+                onClick={() => handleNetworkChange('testnet')}
+                className={`text-sm font-semibold transition-colors ${
+                  selectedNetwork === 'testnet'
+                    ? 'text-indigo-600 dark:text-indigo-300'
+                    : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100'
+                }`}
+              >
+                Testnet
+              </button>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={selectedNetwork === 'mainnet'}
+                aria-label={`Switch to ${selectedNetwork === 'testnet' ? 'Mainnet' : 'Testnet'}`}
+                onClick={() => handleNetworkChange(selectedNetwork === 'testnet' ? 'mainnet' : 'testnet')}
+                className={`relative h-8 w-14 rounded-full border p-0.5 transition-colors ${
+                  selectedNetwork === 'mainnet'
+                    ? 'border-indigo-500 bg-indigo-500'
+                    : 'border-slate-300 bg-slate-200 dark:border-slate-600 dark:bg-slate-700'
+                }`}
+              >
+                <span
+                  className={`block h-6 w-6 rounded-full bg-white shadow-sm transition-transform ${
+                    selectedNetwork === 'mainnet' ? 'translate-x-6' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+              <button
+                type="button"
+                onClick={() => handleNetworkChange('mainnet')}
+                className={`text-sm font-semibold transition-colors ${
+                  selectedNetwork === 'mainnet'
+                    ? 'text-indigo-600 dark:text-indigo-300'
+                    : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100'
+                }`}
+              >
+                Mainnet
+              </button>
+            </div>
+
             {/* Theme toggle */}
             <button
               onClick={toggle}
