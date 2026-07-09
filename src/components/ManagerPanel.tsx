@@ -5,11 +5,12 @@ import type { CreateAuctionInput } from '../services/soroban';
 interface ManagerPanelProps {
   walletAddress: string | null;
   contractReady: boolean;
+  networkLabel: string;
   onConnect: () => void;
   onCreate: (input: CreateAuctionInput) => Promise<void>;
 }
 
-export function ManagerPanel({ walletAddress, contractReady, onConnect, onCreate }: ManagerPanelProps) {
+export function ManagerPanel({ walletAddress, contractReady, networkLabel, onConnect, onCreate }: ManagerPanelProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [startingBidXlm, setStartingBidXlm] = useState('10');
@@ -113,7 +114,7 @@ export function ManagerPanel({ walletAddress, contractReady, onConnect, onCreate
 
         {!contractReady && (
           <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-100">
-            Deploy the auction contract and set `VITE_AUCTION_CONTRACT_ID` before listing projects on-chain.
+            Configure the {networkLabel} auction contract and native token before listing projects on-chain.
           </p>
         )}
 
@@ -125,7 +126,7 @@ export function ManagerPanel({ walletAddress, contractReady, onConnect, onCreate
 
         <button type="submit" disabled={busy || !contractReady} className="btn-primary w-full justify-center stable-button">
           {busy ? <Loader2 className="animate-spin" size={18} /> : <Plus size={18} />}
-          {!contractReady ? 'Contract Not Configured' : walletAddress ? 'List Project' : 'Connect Wallet to List'}
+          {!contractReady ? `${networkLabel} Contract Not Configured` : walletAddress ? 'List Project' : 'Connect Wallet to List'}
         </button>
       </form>
     </section>

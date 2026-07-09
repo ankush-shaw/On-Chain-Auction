@@ -301,6 +301,7 @@ function App() {
           <ManagerPanel
             walletAddress={wallet.address}
             contractReady={contractReady}
+            networkLabel={networkConfig.label}
             onConnect={() => connect('freighter', selectedNetwork)}
             onCreate={handleCreate}
           />
