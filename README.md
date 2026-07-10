@@ -280,7 +280,7 @@ SKIP_SEED=1 npm run deploy:contract
 │   ├── components/
 │   │   ├── AuctionCard.tsx    # Bidding card with active timer & inputs
 │   │   ├── ManagerPanel.tsx   # Dashboard tool for listing new projects
-│   │   └── WalletConnect.tsx  # Interactive multi-wallet selector & logout
+│   │   └── WalletConnect.tsx  # Interactive multi-wallet selector & logout.
 │   ├── hooks/
 │   │   ├── useWallet.ts       # React state hook for Freighter, Albedo, xBull, Hana
 │   │   └── useTheme.ts        # React hook for persistent light/dark cream mode
