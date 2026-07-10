@@ -13,17 +13,19 @@ A decentralized, on-chain project bidding and auction platform built on **Stella
 
 #### ☀️ Light (Cream) Mode & Bidding Board
 
-<img width="1898" height="872" alt="image" src="https://github.com/user-attachments/assets/8e2f696d-ec76-413b-abf2-7a8316cf51c8" />
+<img width="1901" height="866" alt="image" src="https://github.com/user-attachments/assets/a85d033e-d459-47ce-ad8b-1ce5895465ad" />
 
 
 #### 🌙 Dark Mode & Manager Console
 
-<img width="1888" height="861" alt="image" src="https://github.com/user-attachments/assets/bb4cdb07-c8aa-4c12-bc30-09d46b25f82c" />
+<img width="1917" height="867" alt="image" src="https://github.com/user-attachments/assets/f0cf56c5-cfb7-4521-8ebf-b0c7d148b711" />
 
 ### Mobile Responsive view
 
-<img width="276" height="585" alt="image" src="https://github.com/user-attachments/assets/d43f72a3-b390-4a3d-8683-577b983c6c5c" />
+<p align="center">
+    <img width="272" height="582" alt="image" src="https://github.com/user-attachments/assets/415b3070-010d-457b-9fca-a7e428c03dca" />
 
+</p>
 ### Stellar Expert
 
 <img width="1901" height="872" alt="image" src="https://github.com/user-attachments/assets/fd431359-40e2-4288-8e59-b15d528ae9a3" />
