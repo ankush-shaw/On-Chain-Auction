@@ -16,9 +16,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: 1.94.0
-          targets:
-            - wasm32-unknown-unknown
-            - wasm32v1-none
+          targets: wasm32-unknown-unknown, wasm32v1-none
           profile: minimal
 
       - name: Install Stellar CLI
