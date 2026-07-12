@@ -4,6 +4,8 @@ import { ExternalLink, FileText, Github, LayoutDashboard, Moon, RefreshCw, Shiel
 import { AuctionCard } from './components/AuctionCard';
 import { ManagerPanel } from './components/ManagerPanel';
 import { UserDashboard } from './components/UserDashboard';
+import { ExplorerStats } from './components/ExplorerStats';
+import { ExplorerToolbar, StatusFilterType } from './components/ExplorerToolbar';
 import { useWallet } from './hooks/useWallet';
 import { useTheme } from './hooks/useTheme';
 import { demoAuctions } from './data/demoAuctions';
@@ -39,6 +41,9 @@ function App() {
   const [notice, setNotice] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<'board' | 'dashboard'>('board');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilterType>('all');
+  const [sortBy, setSortBy] = useState<string>('ending_soon');
 
   const networkConfig = getNetworkConfig(selectedNetwork);
   const contractReady = isContractConfigured(selectedNetwork);
@@ -95,6 +100,46 @@ function App() {
     const totalBids = auctions.filter((auction) => auction.highestBid !== '0').length;
     return { live, totalBids, total: auctions.length };
   }, [auctions]);
+
+  const hasActiveFilters = searchQuery !== '' || statusFilter !== 'all';
+
+  const handleResetFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setSortBy('ending_soon');
+  };
+
+  const filteredAndSortedAuctions = useMemo(() => {
+    return auctions
+      .filter((a) => {
+        const matchesSearch =
+          a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          a.description.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesStatus = statusFilter === 'all' || a.status === statusFilter;
+        return matchesSearch && matchesStatus;
+      })
+      .sort((a, b) => {
+        if (sortBy === 'ending_soon') {
+          if (a.status === 'live' && b.status !== 'live') return -1;
+          if (a.status !== 'live' && b.status === 'live') return 1;
+          return a.endTime - b.endTime;
+        }
+        if (sortBy === 'newest') {
+          return b.id - a.id;
+        }
+        if (sortBy === 'highest_price') {
+          const priceA = BigInt(a.highestBid !== '0' ? a.highestBid : a.startingBid);
+          const priceB = BigInt(b.highestBid !== '0' ? b.highestBid : b.startingBid);
+          return priceB > priceA ? 1 : priceB < priceA ? -1 : 0;
+        }
+        if (sortBy === 'lowest_price') {
+          const priceA = BigInt(a.highestBid !== '0' ? a.highestBid : a.startingBid);
+          const priceB = BigInt(b.highestBid !== '0' ? b.highestBid : b.startingBid);
+          return priceA > priceB ? 1 : priceA < priceB ? -1 : 0;
+        }
+        return 0;
+      });
+  }, [auctions, searchQuery, statusFilter, sortBy]);
 
   const handleCreate = async (input: CreateAuctionInput) => {
     if (!contractReady) {
@@ -333,31 +378,56 @@ function App() {
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.2 }}
             >
+              {/* Stats Banner */}
+              <ExplorerStats auctions={auctions} />
+
               <section className="mt-8 sm:mt-10">
-                <div className="mb-4 sm:mb-5 flex flex-wrap items-center justify-between gap-3">
+                <div className="mb-4 sm:mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Project Board</h2>
                     <p className="mt-1 text-xs sm:text-sm text-slate-500">Live and recently ended auctions for public bidding.</p>
                   </div>
-                  <button onClick={refreshAuctions} disabled={loading} className="btn-ghost stable-button">
+                  <button onClick={refreshAuctions} disabled={loading} className="btn-ghost stable-button self-start sm:self-auto">
                     <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
                     Refresh
                   </button>
                 </div>
 
+                {/* Filter and query toolbar */}
+                <ExplorerToolbar
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  statusFilter={statusFilter}
+                  setStatusFilter={setStatusFilter}
+                  sortBy={sortBy}
+                  setSortBy={setSortBy}
+                  hasActiveFilters={hasActiveFilters}
+                  onReset={handleResetFilters}
+                />
+
                 <AnimatePresence mode="popLayout">
-                  {auctions.length === 0 ? (
+                  {filteredAndSortedAuctions.length === 0 ? (
                     <div className="rounded-lg border border-dashed border-cream-300 bg-cream-50/60 px-6 py-12 text-center dark:border-slate-700 dark:bg-slate-950/60">
-                      <p className="text-lg font-semibold text-slate-900 dark:text-white">No auctions on the board yet</p>
+                      <p className="text-lg font-semibold text-slate-900 dark:text-white">No auctions match your filters</p>
                       <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                        {contractReady
+                        {hasActiveFilters
+                          ? 'Try resetting the filters or modifying your search terms.'
+                          : contractReady
                           ? 'Connect your wallet and list the first project from the manager console.'
                           : 'Deploy the contract to start listing real projects on-chain.'}
                       </p>
+                      {hasActiveFilters && (
+                        <button
+                          onClick={handleResetFilters}
+                          className="mt-4 btn-primary text-xs font-semibold px-4 py-2 inline-flex items-center justify-center"
+                        >
+                          Clear Filters
+                        </button>
+                      )}
                     </div>
                   ) : (
                     <motion.div layout className="grid gap-4 sm:gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                      {auctions.map((auction) => (
+                      {filteredAndSortedAuctions.map((auction) => (
                         <motion.div
                           key={auction.id}
                           layout
