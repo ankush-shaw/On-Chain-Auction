@@ -95,6 +95,10 @@ Based on structured feedback collected during initial user onboarding phases, we
 *   **Feedback Received:** *"When there are multiple projects listed, finding a specific auction is difficult, and there's no way to see global stats like Total Volume Locked (TVL) or pending settlements."*
 *   **What We Did:** Created a premium stats dashboard banner summarizing TVL, active bid ratios, average bids, and pending settlements. Added a query toolbar with fuzzy search input, status-based filters (All, Live, Ended, Settled), and price/time-based sorting controls.
 
+### 🔹 Iteration 7: Live Bid Price Chart (Expandable Analytics Panel)
+*   **Feedback Received:** *"Would love to see a chart of price updates so I can understand how competitive an auction has been."*
+*   **What We Did:** Added an expandable "View Analytics" panel to every auction card. Clicking it reveals a pure SVG sparkline chart derived from the known bid anchor points (starting bid → current high), plus a metrics row showing start price, current price, and auction window progress. A progress bar visualises how much of the bidding window has elapsed. Settled auctions use green styling; live auctions use indigo.
+
 ---
 
 ## 🚀 Future Evolution Plan (Next Phase)
