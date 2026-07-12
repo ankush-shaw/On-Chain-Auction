@@ -91,6 +91,10 @@ Based on structured feedback collected during initial user onboarding phases, we
 *   **What We Did:** Added a compact Testnet/Mainnet toggle in the header and wired the selected network through wallet balance checks, transaction signing, RPC calls, contract readiness, preview messaging, and Stellar.Expert explorer links. Mainnet stays in preview mode until its contract and native token environment values are configured.
 *   **Git Commit:** [feat: add testnet mainnet toggle](https://github.com/ankush-shaw/On-Chain-Auction/commit/e2d8e4e4a8f0828877eba3fc9b5913133b3ea64c)
 
+### 🔹 Iteration 6: Advanced Board Explorer (Search, Filter & Bulk Stats)
+*   **Feedback Received:** *"When there are multiple projects listed, finding a specific auction is difficult, and there's no way to see global stats like Total Volume Locked (TVL) or pending settlements."*
+*   **What We Did:** Created a premium stats dashboard banner summarizing TVL, active bid ratios, average bids, and pending settlements. Added a query toolbar with fuzzy search input, status-based filters (All, Live, Ended, Settled), and price/time-based sorting controls.
+
 ---
 
 ## 🚀 Future Evolution Plan (Next Phase)
