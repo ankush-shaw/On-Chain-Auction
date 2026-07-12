@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
-import { Clock, Gavel, Loader2, Trophy, Wallet } from 'lucide-react';
+import { BarChart2, ChevronDown, ChevronUp, Clock, Gavel, Loader2, Trophy, Wallet } from 'lucide-react';
 import type { AuctionListing } from '../types';
 import { formatStroops } from '../services/soroban';
+import { BidPriceChart } from './BidPriceChart';
 
 interface AuctionCardProps {
   auction: AuctionListing;
@@ -15,6 +16,7 @@ export function AuctionCard({ auction, walletAddress, onConnect, onBid, onSettle
   const [bidAmount, setBidAmount] = useState('');
   const [busy, setBusy] = useState<'bid' | 'settle' | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showChart, setShowChart] = useState(false);
 
   const currentPrice = auction.highestBid !== '0' ? auction.highestBid : auction.startingBid;
   const minimumBid = useMemo(() => {
@@ -83,7 +85,7 @@ export function AuctionCard({ auction, walletAddress, onConnect, onBid, onSettle
   };
 
   return (
-    <article className="rounded-lg border border-cream-300 bg-cream-50 p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/80 dark:shadow-xl dark:shadow-slate-950/20">
+    <article className="rounded-lg border border-cream-300 bg-cream-50 p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/80 dark:shadow-xl dark:shadow-slate-950/20 transition-all duration-200">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="mb-3 flex items-center gap-2">
@@ -169,6 +171,21 @@ export function AuctionCard({ auction, walletAddress, onConnect, onBid, onSettle
                   : 'Connect to Settle'}
         </button>
       )}
+
+      {/* Analytics expand toggle */}
+      <button
+        onClick={() => setShowChart((v) => !v)}
+        className="mt-4 w-full flex items-center justify-center gap-1.5 rounded-md border border-cream-300 bg-cream-100/50 py-1.5 text-xs font-semibold text-slate-500 hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50/40 transition-all dark:border-slate-700 dark:bg-slate-900/40 dark:hover:text-indigo-400 dark:hover:border-indigo-500/40"
+        aria-expanded={showChart}
+        aria-label="Toggle bid price chart"
+      >
+        <BarChart2 size={13} />
+        {showChart ? 'Hide Analytics' : 'View Analytics'}
+        {showChart ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+      </button>
+
+      {/* Expandable chart panel */}
+      {showChart && <BidPriceChart auction={auction} />}
     </article>
   );
 }
