@@ -8,6 +8,7 @@ import { ExplorerStats } from './components/ExplorerStats';
 import { ExplorerToolbar, StatusFilterType } from './components/ExplorerToolbar';
 import { useWallet } from './hooks/useWallet';
 import { useTheme } from './hooks/useTheme';
+import { useWatchlist } from './hooks/useWatchlist';
 import { demoAuctions } from './data/demoAuctions';
 import type { AuctionListing } from './types';
 import {
@@ -44,6 +45,9 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilterType>('all');
   const [sortBy, setSortBy] = useState<string>('ending_soon');
+  const [showWatchedOnly, setShowWatchedOnly] = useState(false);
+
+  const { watchedIds, toggleWatch, isWatched } = useWatchlist(wallet.address);
 
   const networkConfig = getNetworkConfig(selectedNetwork);
   const contractReady = isContractConfigured(selectedNetwork);
@@ -101,12 +105,13 @@ function App() {
     return { live, totalBids, total: auctions.length };
   }, [auctions]);
 
-  const hasActiveFilters = searchQuery !== '' || statusFilter !== 'all';
+  const hasActiveFilters = searchQuery !== '' || statusFilter !== 'all' || showWatchedOnly;
 
   const handleResetFilters = () => {
     setSearchQuery('');
     setStatusFilter('all');
     setSortBy('ending_soon');
+    setShowWatchedOnly(false);
   };
 
   const filteredAndSortedAuctions = useMemo(() => {
@@ -116,7 +121,8 @@ function App() {
           a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
           a.description.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesStatus = statusFilter === 'all' || a.status === statusFilter;
-        return matchesSearch && matchesStatus;
+        const matchesWatched = !showWatchedOnly || watchedIds.has(a.id);
+        return matchesSearch && matchesStatus && matchesWatched;
       })
       .sort((a, b) => {
         if (sortBy === 'ending_soon') {
@@ -139,7 +145,7 @@ function App() {
         }
         return 0;
       });
-  }, [auctions, searchQuery, statusFilter, sortBy]);
+  }, [auctions, searchQuery, statusFilter, sortBy, showWatchedOnly, watchedIds]);
 
   const handleCreate = async (input: CreateAuctionInput) => {
     if (!contractReady) {
@@ -401,6 +407,8 @@ function App() {
                   setStatusFilter={setStatusFilter}
                   sortBy={sortBy}
                   setSortBy={setSortBy}
+                  showWatchedOnly={showWatchedOnly}
+                  setShowWatchedOnly={setShowWatchedOnly}
                   hasActiveFilters={hasActiveFilters}
                   onReset={handleResetFilters}
                 />
@@ -441,6 +449,8 @@ function App() {
                             onConnect={() => connect('freighter', selectedNetwork)}
                             onBid={handleBid}
                             onSettle={handleSettle}
+                            isWatched={isWatched(auction.id)}
+                            onToggleWatch={toggleWatch}
                           />
                         </motion.div>
                       ))}
