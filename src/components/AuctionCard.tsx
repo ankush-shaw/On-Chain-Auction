@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { BarChart2, ChevronDown, ChevronUp, Clock, Gavel, Loader2, Trophy, Wallet } from 'lucide-react';
+import { BarChart2, ChevronDown, ChevronUp, Clock, Gavel, Loader2, Star, Trophy, Wallet } from 'lucide-react';
 import type { AuctionListing } from '../types';
 import { formatStroops } from '../services/soroban';
 import { BidPriceChart } from './BidPriceChart';
@@ -10,9 +10,19 @@ interface AuctionCardProps {
   onConnect: () => void;
   onBid: (auctionId: number, amountXlm: string) => Promise<void>;
   onSettle: (auctionId: number) => Promise<void>;
+  isWatched?: boolean;
+  onToggleWatch?: (id: number) => void;
 }
 
-export function AuctionCard({ auction, walletAddress, onConnect, onBid, onSettle }: AuctionCardProps) {
+export function AuctionCard({
+  auction,
+  walletAddress,
+  onConnect,
+  onBid,
+  onSettle,
+  isWatched = false,
+  onToggleWatch,
+}: AuctionCardProps) {
   const [bidAmount, setBidAmount] = useState('');
   const [busy, setBusy] = useState<'bid' | 'settle' | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -97,8 +107,23 @@ export function AuctionCard({ auction, walletAddress, onConnect, onBid, onSettle
           <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug dark:text-white">{auction.title}</h3>
           <p className="mt-2 text-sm leading-6 text-slate-600 line-clamp-3 dark:text-slate-400">{auction.description}</p>
         </div>
-        <div className="rounded-md border border-cyan-200 bg-cyan-50/50 p-2.5 sm:p-3 text-cyan-700 shrink-0 dark:border-cyan-400/20 dark:bg-cyan-400/10 dark:text-cyan-200">
-          <Gavel size={20} />
+        <div className="flex flex-col gap-2 shrink-0 items-end">
+          <div className="rounded-md border border-cyan-200 bg-cyan-50/50 p-2.5 sm:p-3 text-cyan-700 dark:border-cyan-400/20 dark:bg-cyan-400/10 dark:text-cyan-200">
+            <Gavel size={20} />
+          </div>
+          {onToggleWatch && (
+            <button
+              onClick={() => onToggleWatch(auction.id)}
+              className={`p-2 rounded-md border transition-all duration-200 hover:scale-105 ${
+                isWatched
+                  ? 'border-amber-300 bg-amber-50 text-amber-500 dark:border-amber-500/30 dark:bg-amber-500/10'
+                  : 'border-cream-300 bg-cream-100/50 text-slate-400 hover:text-slate-600 dark:border-slate-800 dark:bg-slate-900/40 dark:hover:text-slate-200'
+              }`}
+              title={isWatched ? 'Remove from watchlist' : 'Add to watchlist'}
+            >
+              <Star size={16} fill={isWatched ? 'currentColor' : 'none'} />
+            </button>
+          )}
         </div>
       </div>
 
