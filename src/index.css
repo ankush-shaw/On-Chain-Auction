@@ -12,64 +12,91 @@
   }
 
   body {
-    @apply bg-cream-100 text-slate-900 font-sans dark:bg-slate-950 dark:text-slate-100;
+    @apply bg-background text-on-surface font-sans antialiased;
     min-height: 100vh;
     overflow-x: hidden;
   }
 }
 
 @layer components {
-  .glass {
-    @apply rounded-lg border border-cream-300 bg-cream-50/80 dark:border-slate-800 dark:bg-slate-950/80;
-  }
 
+  /* ── Primary CTA — gold "Bid Now" button ─────────────────────────── */
   .btn-primary {
-    @apply flex items-center gap-2 rounded-md bg-cyan-600 px-5 py-3 text-sm font-semibold text-white
-           transition-all duration-200 hover:bg-cyan-700
-           disabled:cursor-not-allowed disabled:opacity-50
-           dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-300;
+    @apply inline-flex items-center gap-2 rounded-lg
+           bg-secondary-container text-on-secondary-fixed
+           px-6 py-3 text-label-lg font-semibold
+           transition-all duration-200
+           hover:brightness-105 hover:shadow-md active:scale-95
+           disabled:cursor-not-allowed disabled:opacity-50;
   }
 
+  /* ── Ghost / outline button ────────────────────────────────────────── */
   .btn-ghost {
-    @apply flex items-center gap-2 rounded-md border border-cream-300 bg-cream-50 px-4 py-3
-           text-sm font-medium text-slate-700
-           transition-all duration-200 hover:border-cream-400 hover:bg-cream-200
-           disabled:cursor-not-allowed disabled:opacity-50
-           dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200
-           dark:hover:border-slate-500 dark:hover:bg-slate-800;
+    @apply inline-flex items-center gap-2 rounded-lg
+           border border-outline-variant bg-surface-container-lowest
+           px-4 py-3 text-body-sm font-semibold text-on-surface
+           transition-all duration-200
+           hover:bg-surface-container hover:border-outline
+           disabled:cursor-not-allowed disabled:opacity-50;
   }
 
+  /* ── Stable height helper ──────────────────────────────────────────── */
   .stable-button {
     min-height: 44px;
     white-space: nowrap;
   }
 
+  /* ── Metric tile (stats row) ───────────────────────────────────────── */
   .metric {
-    @apply rounded-lg border border-cream-300 bg-cream-50 p-3 sm:p-4
-           dark:border-slate-800 dark:bg-slate-900;
+    @apply text-center;
   }
 
   .metric p {
-    @apply text-xl sm:text-2xl font-black text-slate-900 dark:text-white;
+    @apply text-headline-lg font-black text-secondary-container;
   }
 
   .metric span {
-    @apply mt-1 block text-xs font-semibold uppercase tracking-wide text-slate-500;
+    @apply mt-1 block text-label-lg font-semibold text-on-primary-container uppercase tracking-wider;
   }
 
+  /* ── Auction status badge ──────────────────────────────────────────── */
+  .status-badge {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1
+           text-label-sm font-semibold uppercase tracking-wide;
+  }
+
+  .status-badge.live {
+    @apply bg-auction-live/10 text-auction-live border border-auction-live/30;
+  }
+
+  .status-badge.ended {
+    @apply bg-on-surface/10 text-on-surface-variant border border-outline-variant;
+  }
+
+  .status-badge.settled {
+    @apply bg-success-green/10 text-success-green border border-success-green/30;
+  }
+
+  .status-badge.preview {
+    @apply bg-auction-upcoming/10 text-auction-upcoming border border-auction-upcoming/30;
+  }
+
+  /* ── Legacy dot (used in some older components) ────────────────────── */
   .status-dot {
-    @apply h-2.5 w-2.5 rounded-full;
+    @apply h-2.5 w-2.5 rounded-full flex-shrink-0;
   }
 
-  .status-dot.live {
-    @apply bg-emerald-400 shadow-[0_0_16px_rgba(52,211,153,0.8)];
+  .status-dot.live    { @apply bg-auction-live shadow-[0_0_8px_rgba(233,30,99,0.6)]; }
+  .status-dot.ended   { @apply bg-outline; }
+  .status-dot.settled { @apply bg-success-green; }
+
+  /* ── Auction card hover effect ─────────────────────────────────────── */
+  .auction-card-hover {
+    @apply transition-all duration-200 hover:shadow-card-hover hover:-translate-y-0.5;
   }
 
-  .status-dot.ended {
-    @apply bg-amber-400;
-  }
-
-  .status-dot.settled {
-    @apply bg-slate-400 dark:bg-slate-500;
+  /* ── Glass (legacy, keep for compatibility) ────────────────────────── */
+  .glass {
+    @apply rounded-xl border border-outline-variant bg-surface-container-lowest/80 backdrop-blur-sm;
   }
 }
