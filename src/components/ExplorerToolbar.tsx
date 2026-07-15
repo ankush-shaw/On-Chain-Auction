@@ -1,4 +1,4 @@
-import { Search, X, SlidersHorizontal } from 'lucide-react';
+import { Search, X, SlidersHorizontal, Star } from 'lucide-react';
 
 export type StatusFilterType = 'all' | 'live' | 'ended' | 'settled';
 
@@ -9,6 +9,8 @@ interface ExplorerToolbarProps {
   setStatusFilter: (status: StatusFilterType) => void;
   sortBy: string;
   setSortBy: (sort: string) => void;
+  showWatchedOnly: boolean;
+  setShowWatchedOnly: (val: boolean) => void;
   hasActiveFilters: boolean;
   onReset: () => void;
 }
@@ -20,6 +22,8 @@ export function ExplorerToolbar({
   setStatusFilter,
   sortBy,
   setSortBy,
+  showWatchedOnly,
+  setShowWatchedOnly,
   hasActiveFilters,
   onReset,
 }: ExplorerToolbarProps) {
@@ -79,6 +83,20 @@ export function ExplorerToolbar({
             </button>
           ))}
         </div>
+
+        {/* Watched Only Filter Toggle */}
+        <button
+          onClick={() => setShowWatchedOnly(!showWatchedOnly)}
+          className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border transition-all duration-200 ${
+            showWatchedOnly
+              ? 'border-amber-300 bg-amber-50 text-amber-600 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-400 font-bold'
+              : 'border-cream-300 bg-cream-100/50 text-slate-500 hover:text-slate-800 dark:border-slate-800 dark:bg-slate-900/40 dark:hover:text-slate-200'
+          }`}
+          title={showWatchedOnly ? 'Show all listings' : 'Filter by watched'}
+        >
+          <Star size={13} fill={showWatchedOnly ? 'currentColor' : 'none'} className={showWatchedOnly ? 'text-amber-500' : ''} />
+          <span>Watched</span>
+        </button>
 
         {/* Sort Select */}
         <div className="flex items-center gap-2">
