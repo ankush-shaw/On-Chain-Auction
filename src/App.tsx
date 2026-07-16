@@ -4,6 +4,7 @@ import { ExternalLink, FileText, Github, LayoutDashboard, Moon, RefreshCw, Shiel
 import { AuctionCard } from './components/AuctionCard';
 import { ManagerPanel } from './components/ManagerPanel';
 import { UserDashboard } from './components/UserDashboard';
+import { WalletConnectModal } from './components/WalletConnectModal';
 import { ExplorerStats } from './components/ExplorerStats';
 import { ExplorerToolbar, StatusFilterType } from './components/ExplorerToolbar';
 import { useWallet } from './hooks/useWallet';
@@ -46,6 +47,7 @@ function App() {
   const [statusFilter, setStatusFilter] = useState<StatusFilterType>('all');
   const [sortBy, setSortBy] = useState<string>('ending_soon');
   const [showWatchedOnly, setShowWatchedOnly] = useState(false);
+  const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
 
   const { watchedIds, toggleWatch, isWatched } = useWatchlist(wallet.address);
 
@@ -293,7 +295,7 @@ function App() {
               </div>
             ) : (
               <button
-                onClick={() => connect('freighter', selectedNetwork)}
+                onClick={() => setIsWalletModalOpen(true)}
                 disabled={wallet.isConnecting}
                 className="bg-secondary-container text-on-secondary-fixed text-label-lg font-semibold px-5 py-2 rounded-full hover:brightness-110 active:scale-95 transition-all disabled:opacity-60 dark:text-slate-900"
               >
@@ -376,7 +378,7 @@ function App() {
                     walletAddress={wallet.address}
                     contractReady={contractReady}
                     networkLabel={networkConfig.label}
-                    onConnect={() => connect('freighter', selectedNetwork)}
+                    onConnect={() => setIsWalletModalOpen(true)}
                     onCreate={handleCreate}
                   />
                 </div>
@@ -476,7 +478,7 @@ function App() {
                           <AuctionCard
                             auction={auction}
                             walletAddress={wallet.address}
-                            onConnect={() => connect('freighter', selectedNetwork)}
+                            onConnect={() => setIsWalletModalOpen(true)}
                             onBid={handleBid}
                             onSettle={handleSettle}
                             isWatched={isWatched(auction.id)}
@@ -596,6 +598,14 @@ function App() {
           </div>
         </div>
       </footer>
+
+      <WalletConnectModal
+        isOpen={isWalletModalOpen}
+        onClose={() => setIsWalletModalOpen(false)}
+        onConnect={(type) => connect(type, selectedNetwork)}
+        isConnecting={wallet.isConnecting}
+        selectedNetwork={selectedNetwork}
+      />
     </div>
   );
 }
