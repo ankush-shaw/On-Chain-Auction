@@ -141,10 +141,11 @@ export function isWalletInstalled(type: WalletType): boolean {
   if (type === 'albedo') return true;
   if (type === 'xbull') return !!(window as any).xBullSDK;
   if (type === 'hana') return !!(window as any).hanaWallet?.stellar;
-  return (
-    'freighterApi' in window ||
-    'freighter' in window ||
-    typeof (window as any).__freighter !== 'undefined'
+  return !!(
+    (window as any).freighterApi ||
+    (window as any).freighter ||
+    (window as any).stellar ||
+    (window as any).__freighter
   );
 }
 

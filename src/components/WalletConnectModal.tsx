@@ -48,11 +48,27 @@ export function WalletConnectModal({
 
   useEffect(() => {
     if (isOpen) {
-      const map: Record<string, boolean> = {};
+      // Seed synchronously first so it renders instantly
+      const initialMap: Record<string, boolean> = {};
       WALLET_OPTIONS.forEach((w) => {
-        map[w.type] = isWalletInstalled(w.type);
+        initialMap[w.type] = isWalletInstalled(w.type);
       });
-      setInstalledMap(map);
+      setInstalledMap(initialMap);
+
+      // Refine asynchronously using the official check
+      const checkInstallation = async () => {
+        const map: Record<string, boolean> = { ...initialMap };
+        try {
+          const { isConnected } = await import('@stellar/freighter-api');
+          const res = await isConnected();
+          map.freighter = typeof res === 'boolean' ? res : !!(res as any)?.isConnected;
+        } catch {
+          // Fallback is already seeded in initialMap
+        }
+        setInstalledMap(map);
+      };
+      
+      checkInstallation();
     }
   }, [isOpen]);
 
