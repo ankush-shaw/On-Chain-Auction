@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { BarChart2, ChevronDown, ChevronUp, Clock, Gavel, Loader2, Star, Trophy, Wallet } from 'lucide-react';
+import { BarChart2, ChevronDown, ChevronUp, Loader2, Star } from 'lucide-react';
 import type { AuctionListing } from '../types';
 import { formatStroops } from '../services/soroban';
 import { BidPriceChart } from './BidPriceChart';
@@ -94,123 +94,163 @@ export function AuctionCard({
     }
   };
 
+  // Status badge config
+  const statusBadge = {
+    live:    { label: 'Live', cls: 'live',    icon: 'radio_button_checked' },
+    ended:   { label: 'Ended', cls: 'ended',  icon: 'cancel' },
+    settled: { label: 'Settled', cls: 'settled', icon: 'check_circle' },
+    preview: { label: 'Preview', cls: 'preview', icon: 'visibility' },
+  }[auction.isPreview ? 'preview' : auction.status] ?? { label: auction.status, cls: 'ended', icon: 'cancel' };
+
   return (
-    <article className="rounded-lg border border-cream-300 bg-cream-50 p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/80 dark:shadow-xl dark:shadow-slate-950/20 transition-all duration-200">
-      <div className="flex items-start justify-between gap-3">
+    <article className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-auction auction-card-hover transition-all duration-200 overflow-hidden flex flex-col">
+
+      {/* ── Card Header ── */}
+      <div className="px-5 pt-5 pb-4 flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
+          {/* Status badge */}
           <div className="mb-3 flex items-center gap-2">
-            <span className={`status-dot ${auction.status}`} />
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              {auction.isPreview ? 'preview' : auction.status}
+            <span className={`status-badge ${statusBadge.cls}`}>
+              <span className="material-symbols-outlined" style={{ fontSize: '12px', lineHeight: 1 }}>{statusBadge.icon}</span>
+              {statusBadge.label}
             </span>
+            {auction.isPreview && (
+              <span className="text-label-sm text-on-surface-variant opacity-60">Preview</span>
+            )}
           </div>
-          <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug dark:text-white">{auction.title}</h3>
-          <p className="mt-2 text-sm leading-6 text-slate-600 line-clamp-3 dark:text-slate-400">{auction.description}</p>
+
+          <h3 className="text-headline-sm font-bold text-primary leading-snug">{auction.title}</h3>
+          <p className="mt-1.5 text-body-sm text-on-surface-variant line-clamp-2 leading-relaxed">{auction.description}</p>
         </div>
+
+        {/* Watch / Icon column */}
         <div className="flex flex-col gap-2 shrink-0 items-end">
-          <div className="rounded-md border border-cyan-200 bg-cyan-50/50 p-2.5 sm:p-3 text-cyan-700 dark:border-cyan-400/20 dark:bg-cyan-400/10 dark:text-cyan-200">
-            <Gavel size={20} />
+          <div className="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center">
+            <span className="material-symbols-outlined text-primary" style={{ fontSize: '20px' }}>gavel</span>
           </div>
           {onToggleWatch && (
             <button
               onClick={() => onToggleWatch(auction.id)}
-              className={`p-2 rounded-md border transition-all duration-200 hover:scale-105 ${
+              className={`p-1.5 rounded-lg border transition-all duration-200 hover:scale-105 ${
                 isWatched
-                  ? 'border-amber-300 bg-amber-50 text-amber-500 dark:border-amber-500/30 dark:bg-amber-500/10'
-                  : 'border-cream-300 bg-cream-100/50 text-slate-400 hover:text-slate-600 dark:border-slate-800 dark:bg-slate-900/40 dark:hover:text-slate-200'
+                  ? 'border-secondary-container/50 bg-secondary-container/10 text-secondary'
+                  : 'border-outline-variant bg-surface-container text-outline hover:text-on-surface'
               }`}
               title={isWatched ? 'Remove from watchlist' : 'Add to watchlist'}
             >
-              <Star size={16} fill={isWatched ? 'currentColor' : 'none'} />
+              <Star size={15} fill={isWatched ? 'currentColor' : 'none'} />
             </button>
           )}
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
-        <div className="rounded-md bg-cream-200/50 p-3 dark:bg-slate-900">
-          <p className="text-slate-500">Current bid</p>
-          <p className="mt-1 font-semibold text-slate-900 dark:text-white">{formatStroops(currentPrice)} XLM</p>
+      {/* ── Bid Data Row ── */}
+      <div className="mx-5 grid grid-cols-2 gap-3 border-t border-outline-variant pt-4">
+        <div className="bg-surface-container rounded-lg px-3 py-2.5">
+          <p className="text-label-sm text-on-surface-variant uppercase tracking-wide">Current Bid</p>
+          <p className="mt-0.5 text-body-md font-bold text-primary">{formatStroops(currentPrice)} <span className="text-label-sm font-semibold text-on-surface-variant">XLM</span></p>
         </div>
-        <div className="rounded-md bg-cream-200/50 p-3 dark:bg-slate-900">
-          <p className="text-slate-500">Minimum next</p>
-          <p className="mt-1 font-semibold text-slate-900 dark:text-white">{minimumBid} XLM</p>
+        <div className="bg-surface-container rounded-lg px-3 py-2.5">
+          <p className="text-label-sm text-on-surface-variant uppercase tracking-wide">Next Min.</p>
+          <p className="mt-0.5 text-body-md font-bold text-primary">{minimumBid} <span className="text-label-sm font-semibold text-on-surface-variant">XLM</span></p>
         </div>
       </div>
 
-      <div className="mt-4 flex flex-col gap-1.5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-        <span className="flex min-w-0 items-center gap-1.5">
-          <Wallet size={13} className="shrink-0" />
-          <span className="truncate font-mono" title={auction.seller}>
-            {auction.seller.slice(0, 6)}...{auction.seller.slice(-6)}
+      {/* ── Meta row ── */}
+      <div className="mx-5 mt-3 flex items-center justify-between text-label-sm text-on-surface-variant">
+        <span className="flex items-center gap-1.5">
+          <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>account_circle</span>
+          <span className="font-mono truncate max-w-[120px]" title={auction.seller}>
+            {auction.seller.slice(0, 6)}…{auction.seller.slice(-4)}
           </span>
         </span>
-        <span className="flex items-center gap-1.5 text-slate-700 shrink-0 dark:text-slate-300">
-          <Clock size={13} />
+        <span className="flex items-center gap-1.5 text-primary font-semibold">
+          <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>schedule</span>
           {timeLabel}
         </span>
       </div>
 
+      {/* ── Leading bidder strip ── */}
       {auction.highestBidder && (
-        <div className="mt-4 flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-100">
-          <Trophy size={14} />
-          Leading bidder: {auction.highestBidder.slice(0, 6)}...{auction.highestBidder.slice(-4)}
+        <div className="mx-5 mt-3 flex items-center gap-2 rounded-lg border border-secondary-container/30 bg-secondary-container/8 px-3 py-2">
+          <span className="material-symbols-outlined text-secondary" style={{ fontSize: '14px' }}>emoji_events</span>
+          <span className="text-label-sm text-on-secondary-container font-semibold">
+            Leading: {auction.highestBidder.slice(0, 6)}…{auction.highestBidder.slice(-4)}
+          </span>
         </div>
       )}
 
+      {/* ── Error ── */}
       {error && (
-        <p className="mt-4 rounded-md bg-red-100 px-3 py-2 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-300">
+        <p className="mx-5 mt-3 rounded-lg bg-error-container border border-error/30 px-3 py-2 text-body-sm text-on-error-container">
           {error}
         </p>
       )}
 
-      {auction.status === 'live' ? (
-        <div className="mt-5 flex flex-col xs:flex-row gap-2">
-          <input
-            value={bidAmount}
-            onChange={(event) => setBidAmount(event.target.value)}
-            placeholder={`${minimumBid} XLM`}
-            disabled={!canTransact}
-            className="min-w-0 flex-1 rounded-md border border-cream-300 bg-cream-50 px-3 py-3 text-sm text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:border-cyan-400"
-          />
-          <button onClick={submitBid} disabled={busy !== null || !canTransact} className="btn-primary stable-button shrink-0">
-            {busy === 'bid' ? <Loader2 className="animate-spin" size={18} /> : <Gavel size={18} />}
-            {canTransact ? 'Bid' : 'Preview'}
+      {/* ── Action Zone ── */}
+      <div className="mt-4 mx-5 mb-5 flex-1 flex flex-col justify-end gap-2">
+        {auction.status === 'live' ? (
+          <div className="flex gap-2">
+            <input
+              value={bidAmount}
+              onChange={(e) => setBidAmount(e.target.value)}
+              placeholder={`${minimumBid} XLM`}
+              disabled={!canTransact}
+              className="min-w-0 flex-1 rounded-lg border border-outline-variant bg-surface-container-low px-3 py-2.5 text-body-sm text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 placeholder:text-outline"
+            />
+            <button
+              onClick={submitBid}
+              disabled={busy !== null || !canTransact}
+              className="btn-primary shrink-0 stable-button"
+            >
+              {busy === 'bid' ? <Loader2 className="animate-spin" size={16} /> : (
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>gavel</span>
+              )}
+              {canTransact ? 'Bid' : 'Preview'}
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={settle}
+            disabled={auction.settled || busy !== null || !walletAddress || !canSettle}
+            className="btn-primary w-full justify-center stable-button"
+          >
+            {busy === 'settle' ? (
+              <Loader2 className="animate-spin" size={16} />
+            ) : (
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>emoji_events</span>
+            )}
+            {auction.settled
+              ? 'Settled'
+              : !canTransact
+                ? 'Preview Only'
+                : !canSettle
+                  ? 'No Winning Bid'
+                  : walletAddress
+                    ? 'Settle Winner'
+                    : 'Connect to Settle'}
           </button>
-        </div>
-      ) : (
+        )}
+
+        {/* Analytics toggle */}
         <button
-          onClick={settle}
-          disabled={auction.settled || busy !== null || !walletAddress || !canSettle}
-          className="btn-primary mt-5 w-full justify-center stable-button"
+          onClick={() => setShowChart((v) => !v)}
+          className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-outline-variant bg-surface-container py-2 text-label-sm font-semibold text-on-surface-variant hover:text-primary hover:border-primary/40 hover:bg-surface-container-high transition-all"
+          aria-expanded={showChart}
+          aria-label="Toggle bid price chart"
         >
-          {busy === 'settle' ? <Loader2 className="animate-spin" size={18} /> : <Trophy size={18} />}
-          {auction.settled
-            ? 'Settled'
-            : !canTransact
-              ? 'Preview Only'
-              : !canSettle
-                ? 'No Winning Bid'
-                : walletAddress
-                  ? 'Settle Winner'
-                  : 'Connect to Settle'}
+          <BarChart2 size={13} />
+          {showChart ? 'Hide Analytics' : 'View Analytics'}
+          {showChart ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
         </button>
+      </div>
+
+      {/* Expandable chart */}
+      {showChart && (
+        <div className="border-t border-outline-variant">
+          <BidPriceChart auction={auction} />
+        </div>
       )}
-
-      {/* Analytics expand toggle */}
-      <button
-        onClick={() => setShowChart((v) => !v)}
-        className="mt-4 w-full flex items-center justify-center gap-1.5 rounded-md border border-cream-300 bg-cream-100/50 py-1.5 text-xs font-semibold text-slate-500 hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50/40 transition-all dark:border-slate-700 dark:bg-slate-900/40 dark:hover:text-indigo-400 dark:hover:border-indigo-500/40"
-        aria-expanded={showChart}
-        aria-label="Toggle bid price chart"
-      >
-        <BarChart2 size={13} />
-        {showChart ? 'Hide Analytics' : 'View Analytics'}
-        {showChart ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-      </button>
-
-      {/* Expandable chart panel */}
-      {showChart && <BidPriceChart auction={auction} />}
     </article>
   );
 }
