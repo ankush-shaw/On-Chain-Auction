@@ -200,54 +200,66 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-cream-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300">
+    <div className="min-h-screen bg-background text-on-surface font-sans dark:bg-[#030914] dark:text-slate-100 transition-colors duration-300">
 
-      {/* ── Sticky header ── */}
-      <div className="border-b border-cream-300 bg-cream-100/90 sticky top-0 z-50 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-950/90">
-        <header className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:px-5 sm:py-5 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-600 dark:text-cyan-300">Stellar {networkConfig.label}</p>
-            <h1 className="mt-1 text-2xl font-black tracking-normal text-slate-900 dark:text-white sm:text-3xl md:text-4xl">OnChainAuction</h1>
+      {/* ══ STICKY HEADER — Deep Navy / Gold ══ */}
+      <header className="bg-primary sticky top-0 z-50 shadow-sm border-b border-white/10 dark:bg-slate-950 dark:border-slate-900">
+        <div className="mx-auto flex max-w-container-max items-center justify-between px-gutter py-3">
+
+          {/* Logo + Nav */}
+          <div className="flex items-center gap-8">
+            <a href="/" className="flex items-center gap-2 select-none">
+              <div className="w-8 h-8 rounded-lg bg-secondary-container flex items-center justify-center">
+                <span className="material-symbols-outlined text-primary" style={{fontSize:'18px'}}>gavel</span>
+              </div>
+              <span className="text-headline-sm font-black text-secondary-container tracking-tight">
+                OnChain<span className="text-on-primary">Auction</span>
+              </span>
+            </a>
+            <nav className="hidden md:flex gap-6 items-center">
+              <button
+                onClick={() => setActiveSection('board')}
+                className={`text-label-lg transition-opacity ${
+                  activeSection === 'board'
+                    ? 'text-secondary-container border-b-2 border-secondary-container pb-0.5'
+                    : 'text-on-primary opacity-70 hover:opacity-100'
+                }`}
+              >
+                Live Auctions
+              </button>
+              {wallet.isConnected && wallet.address && (
+                <button
+                  onClick={() => setActiveSection(s => s === 'dashboard' ? 'board' : 'dashboard')}
+                  className={`text-label-lg transition-opacity ${
+                    activeSection === 'dashboard'
+                      ? 'text-secondary-container border-b-2 border-secondary-container pb-0.5'
+                      : 'text-on-primary opacity-70 hover:opacity-100'
+                  }`}
+                >
+                  My Dashboard
+                </button>
+              )}
+            </nav>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-2 rounded-md border border-cream-300 bg-cream-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
+          {/* Right controls */}
+          <div className="flex items-center gap-3">
+            {/* Network toggle pill */}
+            <div className="hidden sm:flex items-center gap-1 rounded-full border border-white/20 bg-primary-container px-2 py-1 dark:bg-slate-900/60 dark:border-slate-800">
               <button
                 type="button"
                 onClick={() => handleNetworkChange('testnet')}
-                className={`text-sm font-semibold transition-colors ${
-                  selectedNetwork === 'testnet'
-                    ? 'text-indigo-600 dark:text-indigo-300'
-                    : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100'
+                className={`text-label-sm font-semibold transition-all px-2.5 py-1 rounded-full ${
+                  selectedNetwork === 'testnet' ? 'bg-secondary-container text-primary' : 'text-on-primary-container hover:text-on-primary'
                 }`}
               >
                 Testnet
               </button>
               <button
                 type="button"
-                role="switch"
-                aria-checked={selectedNetwork === 'mainnet'}
-                aria-label={`Switch to ${selectedNetwork === 'testnet' ? 'Mainnet' : 'Testnet'}`}
-                onClick={() => handleNetworkChange(selectedNetwork === 'testnet' ? 'mainnet' : 'testnet')}
-                className={`relative h-8 w-14 rounded-full border p-0.5 transition-colors ${
-                  selectedNetwork === 'mainnet'
-                    ? 'border-indigo-500 bg-indigo-500'
-                    : 'border-slate-300 bg-slate-200 dark:border-slate-600 dark:bg-slate-700'
-                }`}
-              >
-                <span
-                  className={`block h-6 w-6 rounded-full bg-white shadow-sm transition-transform ${
-                    selectedNetwork === 'mainnet' ? 'translate-x-6' : 'translate-x-0'
-                  }`}
-                />
-              </button>
-              <button
-                type="button"
                 onClick={() => handleNetworkChange('mainnet')}
-                className={`text-sm font-semibold transition-colors ${
-                  selectedNetwork === 'mainnet'
-                    ? 'text-indigo-600 dark:text-indigo-300'
-                    : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100'
+                className={`text-label-sm font-semibold transition-all px-2.5 py-1 rounded-full ${
+                  selectedNetwork === 'mainnet' ? 'bg-secondary-container text-primary' : 'text-on-primary-container hover:text-on-primary'
                 }`}
               >
                 Mainnet
@@ -258,107 +270,127 @@ function App() {
             <button
               onClick={toggle}
               aria-label="Toggle theme"
-              className="flex items-center justify-center w-10 h-10 rounded-md border border-cream-300 bg-cream-50 text-slate-600 transition-all hover:bg-cream-200 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+              className="w-9 h-9 rounded-full border border-white/20 bg-primary-container text-on-primary-container flex items-center justify-center hover:bg-white/10 transition-all dark:bg-slate-900 dark:border-slate-800"
             >
-              {isDark ? <Sun size={17} /> : <Moon size={17} />}
+              {isDark ? <Sun size={16} /> : <Moon size={16} />}
             </button>
 
-            {/* My Dashboard button — only when wallet connected */}
-            {wallet.isConnected && wallet.address && (
+            {/* Wallet area */}
+            {wallet.isConnected && wallet.address ? (
+              <div className="flex items-center gap-2">
+                <div className="hidden md:flex items-center gap-2 rounded-full border border-white/20 bg-primary-container px-3 py-1.5 dark:bg-slate-900/60 dark:border-slate-800">
+                  <span className="h-2 w-2 rounded-full bg-success-green animate-pulse" />
+                  <span className="text-label-sm text-on-primary-container font-mono">
+                    {wallet.address.slice(0, 6)}…{wallet.address.slice(-4)}
+                  </span>
+                  {wallet.balance && (
+                    <span className="text-label-sm text-secondary-container font-semibold">{wallet.balance} XLM</span>
+                  )}
+                </div>
+                <button onClick={disconnect} className="text-label-sm text-on-primary opacity-60 hover:opacity-100 transition-opacity">
+                  Sign out
+                </button>
+              </div>
+            ) : (
               <button
-                onClick={() => setActiveSection(s => s === 'dashboard' ? 'board' : 'dashboard')}
-                className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-all stable-button ${
-                  activeSection === 'dashboard'
-                    ? 'border-indigo-400 bg-indigo-50 text-indigo-700 dark:border-indigo-500/50 dark:bg-indigo-500/15 dark:text-indigo-300'
-                    : 'border-cream-300 bg-cream-50 text-slate-600 hover:border-indigo-300 hover:text-indigo-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-indigo-500 dark:hover:text-indigo-400'
-                }`}
+                onClick={() => connect('freighter', selectedNetwork)}
+                disabled={wallet.isConnecting}
+                className="bg-secondary-container text-on-secondary-fixed text-label-lg font-semibold px-5 py-2 rounded-full hover:brightness-110 active:scale-95 transition-all disabled:opacity-60 dark:text-slate-900"
               >
-                <LayoutDashboard size={15} />
-                {activeSection === 'dashboard' ? 'Project Board' : 'My Dashboard'}
+                {wallet.isConnecting ? 'Connecting…' : 'Connect Wallet'}
               </button>
             )}
+          </div>
+        </div>
+      </header>
 
-            {wallet.isConnected && wallet.address ? (
-              <>
-                <div className="rounded-md border border-cream-300 bg-cream-50 px-3 py-2 text-sm min-w-0 max-w-full dark:border-slate-700 dark:bg-slate-900">
-                  <span className="text-slate-500">Wallet </span>
-                  <span className="font-mono text-cyan-700 dark:text-cyan-200">
-                    {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}
-                  </span>
-                  {wallet.balance && <span className="ml-2 text-slate-500 dark:text-slate-400">{wallet.balance} XLM</span>}
-                </div>
-                <button onClick={disconnect} className="btn-ghost stable-button">
-                  Disconnect
-                </button>
-              </>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {walletOptions.map((option) => (
-                  <button
-                    key={option.type}
-                    onClick={() => connect(option.type, selectedNetwork)}
-                    disabled={wallet.isConnecting}
-                    className="btn-ghost stable-button"
-                  >
-                    {option.label}
-                  </button>
-                ))}
+      <main>
+        {/* ══ HERO — headline left + Manager Panel right ══ */}
+        <section className="relative bg-surface-container-lowest overflow-hidden border-b border-outline-variant dark:bg-slate-900/20 dark:border-slate-800/80">
+          <div className="mx-auto max-w-container-max px-gutter py-16 lg:py-20 flex flex-col lg:flex-row items-center gap-12">
+
+            {/* Left: headline + inline stats */}
+            <div className="flex-1 space-y-6 text-center lg:text-left z-10">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-surface-container rounded-full text-label-sm uppercase tracking-wider text-primary dark:bg-slate-800 dark:text-slate-300">
+                <span className="flex h-2 w-2 rounded-full bg-success-green animate-pulse" />
+                On-chain · Stellar Soroban · {networkConfig.label}
               </div>
-            )}
-          </div>
-        </header>
-      </div>
 
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-5 sm:py-8">
+              <h1 className="text-headline-xl text-primary leading-[1.1] dark:text-slate-100">
+                Bid on Projects.<br />
+                <span className="text-secondary dark:text-secondary-container">Settle On-Chain.</span>
+              </h1>
 
-        {/* ── Hero + Manager ── */}
-        <section className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr] lg:items-start">
-          <div className="py-2 sm:py-4">
-            <div className="max-w-3xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-300">
-                On-chain project auctions · Stellar Soroban
+              <p className="text-body-lg text-on-surface-variant max-w-xl mx-auto lg:mx-0 dark:text-slate-400">
+                List digital projects, collect XLM bids, and settle the winner trustlessly via Soroban smart contracts. No intermediaries — just your wallet.
               </p>
-              <h2 className="mt-3 text-3xl sm:text-4xl font-black leading-tight text-slate-900 dark:text-white md:text-5xl lg:text-6xl">
-                Bid on projects.<br className="hidden sm:block" /> Settle on-chain.
-              </h2>
-              <p className="hidden sm:block mt-4 max-w-xl text-base leading-7 text-slate-600 dark:text-slate-400">
-                List projects, collect XLM bids, and settle the winner trustlessly via Soroban smart contracts.
-              </p>
+
+              <div className="flex gap-6 justify-center lg:justify-start pt-2">
+                <div>
+                  <div className="text-headline-md font-black text-primary dark:text-slate-200">{stats.total}</div>
+                  <div className="text-label-sm text-on-surface-variant uppercase tracking-wide dark:text-slate-450">Listings</div>
+                </div>
+                <div className="w-px bg-outline-variant dark:bg-slate-800" />
+                <div>
+                  <div className="text-headline-md font-black text-auction-live">{stats.live}</div>
+                  <div className="text-label-sm text-on-surface-variant uppercase tracking-wide dark:text-slate-450">Live Now</div>
+                </div>
+                <div className="w-px bg-outline-variant dark:bg-slate-800" />
+                <div>
+                  <div className="text-headline-md font-black text-secondary dark:text-secondary-container">{stats.totalBids}</div>
+                  <div className="text-label-sm text-on-surface-variant uppercase tracking-wide dark:text-slate-450">Active Bids</div>
+                </div>
+              </div>
+
+              {wallet.error && (
+                <p className="rounded-lg bg-error-container border border-error/30 px-4 py-2.5 text-body-sm text-on-error-container">
+                  {wallet.error}
+                </p>
+              )}
+              {notice && (
+                <p className="rounded-lg border border-secondary-container/40 bg-secondary-container/10 px-4 py-2.5 text-body-sm text-on-secondary-container">
+                  {notice}
+                </p>
+              )}
+              {success && (
+                <p className="rounded-lg border border-success-green/40 bg-success-green/10 px-4 py-2.5 text-body-sm text-success-green">
+                  {success}
+                </p>
+              )}
             </div>
 
-            <div className="mt-6 sm:mt-8 grid max-w-2xl grid-cols-3 gap-2 sm:gap-3">
-              <div className="metric"><p>{stats.total}</p><span>Listings</span></div>
-              <div className="metric"><p>{stats.live}</p><span>Live</span></div>
-              <div className="metric"><p>{stats.totalBids}</p><span>Bids</span></div>
+            {/* Right: Manager Panel wrapped in Stitch console card */}
+            <div className="w-full max-w-[440px] z-10">
+              <div className="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xl ring-1 ring-black/5 overflow-hidden dark:bg-slate-900 dark:border-slate-800">
+                <div className="bg-primary px-6 py-4 flex items-center gap-3 dark:bg-slate-950">
+                  <div className="w-9 h-9 bg-secondary-container/20 rounded-lg flex items-center justify-center">
+                    <span className="material-symbols-outlined text-secondary-container" style={{fontSize:'20px'}}>add_circle</span>
+                  </div>
+                  <div>
+                    <h3 className="text-on-primary font-bold text-sm">List a Project</h3>
+                    <p className="text-on-primary-container text-label-sm opacity-70">Create an on-chain auction</p>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <ManagerPanel
+                    walletAddress={wallet.address}
+                    contractReady={contractReady}
+                    networkLabel={networkConfig.label}
+                    onConnect={() => connect('freighter', selectedNetwork)}
+                    onCreate={handleCreate}
+                  />
+                </div>
+              </div>
             </div>
-
-            {wallet.error && (
-              <p className="mt-4 rounded-md bg-red-100 px-3 py-2 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-300">
-                {wallet.error}
-              </p>
-            )}
-            {notice && (
-              <p className="mt-4 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-100">
-                {notice}
-              </p>
-            )}
-            {success && (
-              <p className="mt-4 rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-100">
-                {success}
-              </p>
-            )}
           </div>
-
-          <ManagerPanel
-            walletAddress={wallet.address}
-            contractReady={contractReady}
-            networkLabel={networkConfig.label}
-            onConnect={() => connect('freighter', selectedNetwork)}
-            onCreate={handleCreate}
-          />
+          <div className="absolute -bottom-16 -right-16 w-72 h-72 bg-secondary-container/5 blur-[80px] rounded-full pointer-events-none" />
         </section>
 
-        {/* ── Project Board OR User Dashboard ── */}
+        {/* Stats Band */}
+        <ExplorerStats auctions={auctions} />
+
+        {/* ══ PROJECT BOARD / USER DASHBOARD ══ */}
+        <div className="mx-auto max-w-container-max px-gutter py-10">
         <AnimatePresence mode="wait">
           {activeSection === 'dashboard' && wallet.address ? (
             <motion.div
@@ -384,17 +416,14 @@ function App() {
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.2 }}
             >
-              {/* Stats Banner */}
-              <ExplorerStats auctions={auctions} />
-
-              <section className="mt-8 sm:mt-10">
-                <div className="mb-4 sm:mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <section>
+                <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Project Board</h2>
-                    <p className="mt-1 text-xs sm:text-sm text-slate-500">Live and recently ended auctions for public bidding.</p>
+                    <h2 className="text-headline-md font-bold text-primary dark:text-slate-100">Project Board</h2>
+                    <p className="mt-0.5 text-body-sm text-on-surface-variant dark:text-slate-400">Live and recently ended auctions open for public bidding.</p>
                   </div>
                   <button onClick={refreshAuctions} disabled={loading} className="btn-ghost stable-button self-start sm:self-auto">
-                    <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+                    <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
                     Refresh
                   </button>
                 </div>
@@ -415,9 +444,10 @@ function App() {
 
                 <AnimatePresence mode="popLayout">
                   {filteredAndSortedAuctions.length === 0 ? (
-                    <div className="rounded-lg border border-dashed border-cream-300 bg-cream-50/60 px-6 py-12 text-center dark:border-slate-700 dark:bg-slate-950/60">
-                      <p className="text-lg font-semibold text-slate-900 dark:text-white">No auctions match your filters</p>
-                      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                    <div className="rounded-xl border border-dashed border-outline-variant bg-surface-container-low px-6 py-14 text-center dark:bg-slate-900/20 dark:border-slate-800">
+                      <span className="material-symbols-outlined text-outline text-5xl mb-3 block">inventory_2</span>
+                      <p className="text-headline-sm font-semibold text-on-surface dark:text-slate-200">{hasActiveFilters ? 'No auctions match your filters' : 'No active auctions'}</p>
+                      <p className="mt-2 text-body-sm text-on-surface-variant dark:text-slate-400">
                         {hasActiveFilters
                           ? 'Try resetting the filters or modifying your search terms.'
                           : contractReady
@@ -461,74 +491,111 @@ function App() {
             </motion.div>
           )}
         </AnimatePresence>
+        </div>
 
-        {/* ── Feature cards ── */}
-        <section className="mt-14 sm:mt-20">
-          <div className="grid gap-4 sm:grid-cols-3">
-            {[
-              {
-                icon: <FileText size={22} />,
-                title: 'Transparent Listings',
-                body: 'Every project is stored immutably on Stellar Soroban — fully on-chain and publicly verifiable.',
-              },
-              {
-                icon: <ShieldCheck size={22} />,
-                title: 'Trustless Settlement',
-                body: 'Winning bids are settled automatically by the smart contract. No admin, no intermediaries.',
-              },
-              {
-                icon: <Users size={22} />,
-                title: 'Permissionless Bidding',
-                body: 'Anyone with a Stellar wallet can connect and bid. No sign-up, no KYC — just your keys.',
-              },
-            ].map(({ icon, title, body }) => (
-              <div
-                key={title}
-                className="rounded-2xl border border-cream-300 bg-cream-50 p-6 flex flex-col gap-4 dark:border-slate-800 dark:bg-slate-900/60"
-              >
-                <div className="w-11 h-11 rounded-xl bg-indigo-100 border border-indigo-200 flex items-center justify-center text-indigo-600 dark:bg-indigo-500/20 dark:border-indigo-500/30 dark:text-indigo-400">
-                  {icon}
+        {/* ══ WHY ON-CHAIN — Trust section ══ */}
+        <section className="py-section-padding bg-surface-container-low border-t border-outline-variant dark:bg-slate-900/10 dark:border-slate-800/80">
+          <div className="mx-auto max-w-container-max px-gutter">
+            <div className="text-center mb-12">
+              <h2 className="text-headline-lg font-bold text-primary dark:text-slate-100">Why On-Chain Auction?</h2>
+              <p className="mt-3 text-body-lg text-on-surface-variant max-w-2xl mx-auto dark:text-slate-400 font-medium">Powered by Stellar Soroban — transparent, trustless, permissionless.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[
+                { icon: 'receipt_long', title: 'Transparent Listings', body: 'Every project is stored immutably on Stellar Soroban — fully on-chain and publicly verifiable by anyone.', accent: false },
+                { icon: 'verified_user', title: 'Trustless Settlement', body: 'Winning bids are settled automatically by the smart contract. No admin, no intermediaries, no trust required.', accent: true },
+                { icon: 'language', title: 'Permissionless Bidding', body: 'Anyone with a Stellar wallet can connect and bid. No sign-up, no KYC — just your keys and the contract.', accent: false },
+              ].map(({ icon, title, body, accent }) => (
+                <div
+                  key={title}
+                  className={`rounded-xl p-8 text-center auction-card-hover border transition-all ${
+                    accent
+                      ? 'bg-primary text-on-primary border-transparent shadow-xl -translate-y-2 dark:bg-slate-900/60 dark:border-slate-800'
+                      : 'bg-surface-container-lowest border-outline-variant dark:bg-slate-900 dark:border-slate-800'
+                  }`}
+                >
+                  <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5 ${ accent ? 'bg-secondary-container/20' : 'bg-surface-container dark:bg-slate-800' }`}>
+                    <span className={`material-symbols-outlined text-2xl ${ accent ? 'text-secondary-container' : 'text-primary dark:text-slate-300' }`}>{icon}</span>
+                  </div>
+                  <h3 className={`text-headline-sm font-bold mb-3 ${ accent ? 'text-on-primary' : 'text-primary dark:text-slate-200' }`}>{title}</h3>
+                  <p className={`text-body-sm leading-relaxed ${ accent ? 'text-on-primary-container' : 'text-on-surface-variant dark:text-slate-400' }`}>{body}</p>
                 </div>
-                <div>
-                  <h3 className="font-bold text-slate-900 dark:text-white text-base">{title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">{body}</p>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </section>
 
-        {/* ── Footer bar ── */}
-        <footer className="mt-10 flex flex-col gap-3 border-t border-cream-300 py-5 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-            <span className="text-slate-600 font-medium dark:text-slate-400">Soroban {networkConfig.label}</span>
-            <span className="text-slate-400 dark:text-slate-600">·</span>
-            <span className="font-mono text-slate-500">v1.0.0</span>
-          </div>
-          <div className="flex flex-wrap items-center gap-5">
-            <a
-              href="https://github.com/ankush-shaw/On-Chain-Auction"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 hover:text-slate-900 transition-colors dark:hover:text-white"
-            >
-              <Github size={15} />
-              GitHub
-            </a>
-            {networkConfig.contractId && (
-              <a
-                href={`https://stellar.expert/explorer/${networkConfig.explorerNetwork}/contract/${networkConfig.contractId}`}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 hover:text-cyan-700 transition-colors dark:hover:text-cyan-200"
-              >
-                View Contract <ExternalLink size={13} />
-              </a>
-            )}
-          </div>
-        </footer>
       </main>
+
+      {/* ══ FOOTER — Dark navy branded ══ */}
+      <footer className="bg-primary border-t border-white/10 dark:bg-slate-950 dark:border-slate-900">
+        <div className="mx-auto max-w-container-max px-gutter py-12 grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-md bg-secondary-container flex items-center justify-center">
+                <span className="material-symbols-outlined text-primary" style={{fontSize:'16px'}}>gavel</span>
+              </div>
+              <span className="font-black text-secondary-container tracking-tight">OnChain<span className="text-on-primary">Auction</span></span>
+            </div>
+            <p className="text-on-primary opacity-50 text-body-sm leading-relaxed">
+              A trustless project auction platform built on Stellar Soroban. Transparent bids, automatic settlement.
+            </p>
+            <div className="flex gap-3">
+              <a href="https://github.com/ankush-shaw/On-Chain-Auction" target="_blank" rel="noreferrer"
+                className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-on-primary opacity-60 hover:opacity-100 hover:bg-white/10 transition-all">
+                <Github size={15} />
+              </a>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-on-primary text-label-sm font-semibold uppercase tracking-widest opacity-50">Platform</h4>
+            <ul className="space-y-3">
+              {['Live Auctions', 'How to Bid', 'How to List', 'My Dashboard'].map(l => (
+                <li key={l}><a href="#" className="text-on-primary opacity-50 hover:opacity-100 hover:text-secondary-container transition-all text-label-sm">{l}</a></li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-on-primary text-label-sm font-semibold uppercase tracking-widest opacity-50">Network</h4>
+            <ul className="space-y-3">
+              {['Stellar Soroban', 'Testnet Explorer', 'Mainnet Explorer', 'Contract Docs'].map(l => (
+                <li key={l}><a href="#" className="text-on-primary opacity-50 hover:opacity-100 hover:text-secondary-container transition-all text-label-sm">{l}</a></li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-on-primary text-label-sm font-semibold uppercase tracking-widest opacity-50">On-Chain Status</h4>
+            <div className="bg-primary-container rounded-xl p-4 border border-white/10 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className={`h-2 w-2 rounded-full ${contractReady ? 'bg-success-green' : 'bg-outline'}`} />
+                <span className="text-label-sm text-on-primary-container">{contractReady ? 'Contract Live' : 'Preview Mode'}</span>
+              </div>
+              <div className="text-label-sm text-on-primary-container opacity-60">Network: {networkConfig.label}</div>
+              {networkConfig.contractId && (
+                <a href={`https://stellar.expert/explorer/${networkConfig.explorerNetwork}/contract/${networkConfig.contractId}`}
+                  target="_blank" rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-secondary-container text-label-sm hover:brightness-110">
+                  View Contract <ExternalLink size={11} />
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-white/5 py-6">
+          <div className="mx-auto max-w-container-max px-gutter flex flex-col sm:flex-row justify-between items-center gap-3 text-on-primary opacity-40 text-label-sm">
+            <p>© {new Date().getFullYear()} OnChainAuction. Built on Stellar Soroban.</p>
+            <div className="flex gap-6">
+              <a href="#" className="hover:text-secondary-container hover:opacity-100 transition-all">Privacy</a>
+              <a href="#" className="hover:text-secondary-container hover:opacity-100 transition-all">Terms</a>
+              <a href="#" className="hover:text-secondary-container hover:opacity-100 transition-all">Support</a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

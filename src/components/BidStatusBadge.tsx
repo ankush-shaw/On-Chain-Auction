@@ -11,9 +11,6 @@ export type BidStatus =
   | 'listing_ended'
   | 'listing_settled';
 
-/**
- * Derives the bid/listing status for a specific wallet address on a given auction.
- */
 export function deriveBidStatus(
   auction: AuctionListing,
   walletAddress: string
@@ -41,52 +38,52 @@ export function deriveBidStatus(
 
 const STATUS_CONFIG: Record<
   BidStatus,
-  { label: string; classes: string }
+  { label: string; icon: string; classes: string }
 > = {
   leading: {
-    label: '🟢 Leading',
-    classes:
-      'bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/30',
+    label: 'Leading',
+    icon: 'radio_button_checked',
+    classes: 'bg-success-green/10 text-success-green border border-success-green/30',
   },
   outbid: {
-    label: '🔴 Outbid',
-    classes:
-      'bg-red-100 text-red-800 border border-red-300 dark:bg-red-500/15 dark:text-red-300 dark:border-red-500/30',
+    label: 'Outbid',
+    icon: 'cancel',
+    classes: 'bg-error/10 text-error border border-error/30',
   },
   won: {
-    label: '🏆 Won',
-    classes:
-      'bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30',
+    label: 'Won',
+    icon: 'emoji_events',
+    classes: 'bg-secondary-container/10 text-secondary border border-secondary-container/30',
   },
   settled_no_bid: {
     label: 'Settled',
-    classes:
-      'bg-slate-100 text-slate-600 border border-slate-300 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700',
+    icon: 'check_circle',
+    classes: 'bg-on-surface/10 text-on-surface-variant border border-outline-variant',
   },
   ended_no_bid: {
     label: 'Ended',
-    classes:
-      'bg-slate-100 text-slate-600 border border-slate-300 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700',
+    icon: 'cancel',
+    classes: 'bg-on-surface/10 text-on-surface-variant border border-outline-variant',
   },
   your_listing: {
     label: 'Your Listing',
-    classes:
-      'bg-indigo-100 text-indigo-800 border border-indigo-300 dark:bg-indigo-500/15 dark:text-indigo-300 dark:border-indigo-500/30',
+    icon: 'account_circle',
+    classes: 'bg-primary/10 text-primary border border-primary/20 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
   },
   listing_live: {
-    label: '📢 Live',
-    classes:
-      'bg-cyan-100 text-cyan-800 border border-cyan-300 dark:bg-cyan-500/15 dark:text-cyan-300 dark:border-cyan-500/30',
+    label: 'Live',
+    icon: 'radio_button_checked',
+    classes: 'bg-auction-live/10 text-auction-live border border-auction-live/30',
   },
   listing_ended: {
-    label: '⏰ Needs Settlement',
-    classes:
-      'bg-orange-100 text-orange-800 border border-orange-300 dark:bg-orange-500/15 dark:text-orange-300 dark:border-orange-500/30',
+    label: 'Action Required',
+    icon: 'hourglass_empty',
+    classes: 'bg-secondary-container/20 text-on-secondary-container border border-secondary-container/40',
   },
   listing_settled: {
-    label: '✅ Settled',
-    classes:
-      'bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/30',
+    label: 'Settled',
+    icon: 'check_circle',
+    classes: 'bg-success-green/10 text-success-green border border-success-green/30',
   },
 };
 
@@ -97,12 +94,13 @@ interface BidStatusBadgeProps {
 
 export function BidStatusBadge({ auction, walletAddress }: BidStatusBadgeProps) {
   const status = deriveBidStatus(auction, walletAddress);
-  const { label, classes } = STATUS_CONFIG[status];
+  const { label, icon, classes } = STATUS_CONFIG[status];
 
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${classes}`}
+      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-label-sm font-semibold uppercase tracking-wide ${classes}`}
     >
+      <span className="material-symbols-outlined" style={{ fontSize: '12px', lineHeight: 1 }}>{icon}</span>
       {label}
     </span>
   );

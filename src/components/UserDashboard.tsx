@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle, Clock, Gavel, LayoutDashboard, ListOrdered, Loader2, ShieldCheck, Trophy } from 'lucide-react';
+import { AlertCircle, Clock, LayoutDashboard, Loader2 } from 'lucide-react';
 import type { AuctionListing } from '../types';
 import { useDashboard } from '../hooks/useDashboard';
 import { BidStatusBadge, deriveBidStatus } from './BidStatusBadge';
@@ -17,11 +17,11 @@ interface UserDashboardProps {
 }
 
 // ── Stat tile ──────────────────────────────────────────────────────────────
-function StatTile({ value, label, accent }: { value: number; label: string; accent: string }) {
+function StatTile({ value, label, colorClass }: { value: number; label: string; colorClass: string }) {
   return (
-    <div className="metric flex flex-col gap-1">
-      <p className={`text-2xl font-black ${accent}`}>{value}</p>
-      <span>{label}</span>
+    <div className="bg-surface-container-lowest border border-outline-variant dark:bg-slate-900 dark:border-slate-800 rounded-xl p-5 text-center transition-all duration-200">
+      <p className={`text-headline-md font-black ${colorClass}`}>{value}</p>
+      <span className="mt-1 block text-label-sm font-semibold uppercase tracking-wider text-on-surface-variant dark:text-slate-400">{label}</span>
     </div>
   );
 }
@@ -55,29 +55,29 @@ function BidCard({
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -14 }}
-      className="rounded-lg border border-cream-300 bg-cream-50 p-4 dark:border-slate-800 dark:bg-slate-900 flex flex-col gap-3"
+      className="bg-surface-container-lowest border border-outline-variant dark:bg-slate-900 dark:border-slate-800 rounded-xl p-5 flex flex-col gap-4 shadow-auction hover:shadow-card-hover transition-all duration-200"
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <h3 className="font-bold text-slate-900 dark:text-white truncate">{auction.title}</h3>
-          <p className="mt-0.5 text-xs text-slate-500 flex items-center gap-1">
-            <Clock size={11} />
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <h3 className="text-body-lg font-bold text-primary dark:text-slate-100 truncate">{auction.title}</h3>
+          <p className="mt-1 text-label-sm text-on-surface-variant dark:text-slate-400 flex items-center gap-1.5 font-semibold">
+            <Clock size={13} />
             {timeLabel}
           </p>
         </div>
         <BidStatusBadge auction={auction} walletAddress={walletAddress} />
       </div>
 
-      <div className="grid grid-cols-2 gap-2 text-xs">
-        <div className="rounded-md bg-cream-200/50 p-2 dark:bg-slate-800">
-          <p className="text-slate-500">Your bid</p>
-          <p className="mt-0.5 font-semibold text-slate-900 dark:text-white">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-surface-container dark:bg-slate-800/80 rounded-lg p-2.5">
+          <p className="text-label-sm text-on-surface-variant dark:text-slate-400 uppercase tracking-wide">Your Bid</p>
+          <p className="mt-0.5 text-body-md font-bold text-primary dark:text-slate-100">
             {formatStroops(auction.highestBid)} XLM
           </p>
         </div>
-        <div className="rounded-md bg-cream-200/50 p-2 dark:bg-slate-800">
-          <p className="text-slate-500">Starting bid</p>
-          <p className="mt-0.5 font-semibold text-slate-900 dark:text-white">
+        <div className="bg-surface-container dark:bg-slate-800/80 rounded-lg p-2.5">
+          <p className="text-label-sm text-on-surface-variant dark:text-slate-400 uppercase tracking-wide">Starting</p>
+          <p className="mt-0.5 text-body-md font-bold text-primary dark:text-slate-100">
             {formatStroops(auction.startingBid)} XLM
           </p>
         </div>
@@ -92,8 +92,10 @@ function BidCard({
           disabled={busy}
           className="btn-primary w-full justify-center stable-button text-xs"
         >
-          {busy ? <Loader2 size={14} className="animate-spin" /> : <Trophy size={14} />}
-          Claim Win — Settle Auction
+          {busy ? <Loader2 size={14} className="animate-spin" /> : (
+            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>emoji_events</span>
+          )}
+          Claim Win & Settle On-Chain
         </button>
       )}
     </motion.article>
@@ -124,26 +126,26 @@ function ListingCard({
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -14 }}
-      className="rounded-lg border border-cream-300 bg-cream-50 p-4 dark:border-slate-800 dark:bg-slate-900 flex flex-col gap-3"
+      className="bg-surface-container-lowest border border-outline-variant dark:bg-slate-900 dark:border-slate-800 rounded-xl p-5 flex flex-col gap-4 shadow-auction hover:shadow-card-hover transition-all duration-200"
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <h3 className="font-bold text-slate-900 dark:text-white truncate">{auction.title}</h3>
-          <p className="mt-0.5 text-xs text-slate-500 line-clamp-2">{auction.description}</p>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <h3 className="text-body-lg font-bold text-primary dark:text-slate-100 truncate">{auction.title}</h3>
+          <p className="mt-1 text-label-sm text-on-surface-variant dark:text-slate-400 line-clamp-2 leading-relaxed">{auction.description}</p>
         </div>
         <BidStatusBadge auction={auction} walletAddress={walletAddress} />
       </div>
 
-      <div className="grid grid-cols-2 gap-2 text-xs">
-        <div className="rounded-md bg-cream-200/50 p-2 dark:bg-slate-800">
-          <p className="text-slate-500">Highest bid</p>
-          <p className="mt-0.5 font-semibold text-slate-900 dark:text-white">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-surface-container dark:bg-slate-800/80 rounded-lg p-2.5">
+          <p className="text-label-sm text-on-surface-variant dark:text-slate-400 uppercase tracking-wide">Highest Bid</p>
+          <p className="mt-0.5 text-body-md font-bold text-primary dark:text-slate-100">
             {auction.highestBid === '0' ? 'No bids yet' : `${formatStroops(auction.highestBid)} XLM`}
           </p>
         </div>
-        <div className="rounded-md bg-cream-200/50 p-2 dark:bg-slate-800">
-          <p className="text-slate-500">Status</p>
-          <p className="mt-0.5 font-semibold capitalize text-slate-900 dark:text-white">
+        <div className="bg-surface-container dark:bg-slate-800/80 rounded-lg p-2.5">
+          <p className="text-label-sm text-on-surface-variant dark:text-slate-400 uppercase tracking-wide">Status</p>
+          <p className="mt-0.5 text-body-md font-bold capitalize text-primary dark:text-slate-100">
             {auction.settled ? 'Settled' : auction.status}
           </p>
         </div>
@@ -158,15 +160,17 @@ function ListingCard({
           disabled={busy}
           className="btn-primary w-full justify-center stable-button text-xs"
         >
-          {busy ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
-          Settle & Collect Winning Bid
+          {busy ? <Loader2 size={14} className="animate-spin" /> : (
+            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>verified_user</span>
+          )}
+          Settle & Collect Winner's Bid
         </button>
       )}
 
       {auction.settled && (
-        <div className="flex items-center gap-2 rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
-          <Trophy size={12} />
-          Funds transferred to your wallet
+        <div className="flex items-center gap-2 rounded-lg border border-success-green/30 bg-success-green/10 px-3.5 py-2.5 text-label-sm text-success-green font-semibold">
+          <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>check_circle</span>
+          Funds released to your wallet address.
         </div>
       )}
     </motion.article>
@@ -174,19 +178,19 @@ function ListingCard({
 }
 
 // ── Empty state ────────────────────────────────────────────────────────────
-function EmptyState({ icon, title, body }: { icon: React.ReactNode; title: string; body: string }) {
+function EmptyState({ icon, title, body }: { icon: string; title: string; body: string }) {
   return (
-    <div className="rounded-lg border border-dashed border-cream-300 bg-cream-50/60 px-6 py-12 text-center dark:border-slate-700 dark:bg-slate-950/40">
-      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400 dark:border-slate-700 dark:bg-slate-900">
-        {icon}
+    <div className="rounded-xl border border-dashed border-outline-variant bg-surface-container px-6 py-12 text-center">
+      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface-variant">
+        <span className="material-symbols-outlined text-xl">{icon}</span>
       </div>
-      <p className="font-semibold text-slate-900 dark:text-white">{title}</p>
-      <p className="mt-1 text-sm text-slate-500">{body}</p>
+      <p className="font-bold text-primary dark:text-slate-200 text-body-lg">{title}</p>
+      <p className="mt-2 text-body-sm text-on-surface-variant dark:text-slate-450 max-w-sm mx-auto">{body}</p>
     </div>
   );
 }
 
-// ── Main component ─────────────────────────────────────────────────────────
+// ── Main Dashboard ─────────────────────────────────────────────────────────
 export function UserDashboard({ auctions, walletAddress, contractReady, onSettle, onBid }: UserDashboardProps) {
   const [activeTab, setActiveTab] = useState<DashTab>('bids');
   const { myBids, myListings, dashStats } = useDashboard(auctions, walletAddress);
@@ -199,66 +203,66 @@ export function UserDashboard({ auctions, walletAddress, contractReady, onSettle
     [myListings]
   );
 
-  const tabs: { id: DashTab; label: string; count: number; badge?: number; icon: React.ReactNode }[] = [
-    { id: 'bids', label: 'My Bids', count: myBids.length, icon: <Gavel size={15} /> },
-    { id: 'listings', label: 'My Listings', count: myListings.length, badge: needsSettlement, icon: <ListOrdered size={15} /> },
+  const tabs: { id: DashTab; label: string; count: number; badge?: number; icon: string }[] = [
+    { id: 'bids', label: 'My Bids', count: myBids.length, icon: 'gavel' },
+    { id: 'listings', label: 'My Listings', count: myListings.length, badge: needsSettlement, icon: 'list_alt' },
   ];
 
   return (
-    <section className="mt-8 sm:mt-10">
+    <section>
       {/* Header */}
-      <div className="mb-5 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-600 dark:border-indigo-500/30 dark:bg-indigo-500/15 dark:text-indigo-400">
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-outline-variant bg-surface-container-lowest text-primary dark:bg-slate-900 dark:border-slate-800 dark:text-slate-200">
           <LayoutDashboard size={20} />
         </div>
         <div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">My Dashboard</h2>
-          <p className="text-xs text-slate-500 sm:text-sm">Personal view of your bids and listings on-chain.</p>
+          <h2 className="text-headline-md font-bold text-primary dark:text-slate-100">My Dashboard</h2>
+          <p className="text-body-sm text-on-surface-variant dark:text-slate-400">Personal view of your bids and listings on-chain.</p>
         </div>
       </div>
 
       {/* Preview mode notice */}
       {!contractReady && (
-        <div className="mb-5 flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2.5 text-sm text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-200">
-          <AlertCircle size={15} className="shrink-0" />
-          Preview mode — connect a deployed contract to see your real on-chain bids and listings here.
+        <div className="mb-6 flex items-center gap-3.5 rounded-lg border border-secondary-container/40 bg-secondary-container/10 px-4 py-3 text-body-sm text-on-secondary-container">
+          <AlertCircle size={16} className="shrink-0" />
+          <span><span className="font-bold">Preview Mode:</span> Connect a deployed contract to view your real on-chain bids and listings.</span>
         </div>
       )}
 
       {/* Stats row */}
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatTile value={dashStats.activeBids} label="Active Bids" accent="text-cyan-600 dark:text-cyan-400" />
-        <StatTile value={dashStats.wonAuctions} label="Auctions Won" accent="text-amber-600 dark:text-amber-400" />
-        <StatTile value={dashStats.activeListings} label="Live Listings" accent="text-emerald-600 dark:text-emerald-400" />
-        <StatTile value={needsSettlement} label="Needs Settlement" accent="text-orange-600 dark:text-orange-400" />
+      <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <StatTile value={dashStats.activeBids} label="Active Bids" colorClass="text-secondary" />
+        <StatTile value={dashStats.wonAuctions} label="Auctions Won" colorClass="text-success-green" />
+        <StatTile value={dashStats.activeListings} label="Live Listings" colorClass="text-auction-live" />
+        <StatTile value={needsSettlement} label="Needs Settlement" colorClass="text-secondary-container" />
       </div>
 
       {/* Tab bar */}
-      <div className="mb-5 flex gap-1 rounded-lg border border-cream-300 bg-cream-50 p-1 dark:border-slate-800 dark:bg-slate-900">
+      <div className="mb-6 flex gap-1 rounded-xl border border-outline-variant bg-surface-container p-1.5 dark:bg-slate-900 dark:border-slate-800">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`relative flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
+            className={`relative flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-label-lg transition-all duration-200 ${
               activeTab === tab.id
-                ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-white'
-                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                ? 'bg-surface-container-lowest text-primary shadow-sm border border-outline-variant dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700'
+                : 'text-on-surface-variant hover:text-on-surface dark:text-slate-400 dark:hover:text-slate-200'
             }`}
           >
-            {tab.icon}
+            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>{tab.icon}</span>
             {tab.label}
             <span
-              className={`ml-1 rounded-full px-1.5 py-0.5 text-xs font-bold ${
+              className={`ml-1.5 rounded-full px-2 py-0.5 text-label-sm font-bold ${
                 activeTab === tab.id
-                  ? 'bg-cyan-100 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300'
-                  : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400'
+                  ? 'bg-primary/10 text-primary dark:bg-slate-700 dark:text-slate-300'
+                  : 'bg-surface-container-high text-on-surface-variant'
               }`}
             >
               {tab.count}
             </span>
             {/* Urgent settlement badge */}
             {tab.badge !== undefined && tab.badge > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-orange-500 text-[10px] font-black text-white">
+              <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-secondary-container text-[11px] font-black text-primary shadow-md">
                 {tab.badge}
               </span>
             )}
@@ -278,12 +282,12 @@ export function UserDashboard({ auctions, walletAddress, contractReady, onSettle
           >
             {myBids.length === 0 ? (
               <EmptyState
-                icon={<Gavel size={22} />}
+                icon="gavel"
                 title="No bids placed yet"
                 body="Place a bid on any live project from the Project Board to see it tracked here."
               />
             ) : (
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                 <AnimatePresence>
                   {myBids.map((auction) => (
                     <BidCard
@@ -309,12 +313,12 @@ export function UserDashboard({ auctions, walletAddress, contractReady, onSettle
           >
             {myListings.length === 0 ? (
               <EmptyState
-                icon={<ListOrdered size={22} />}
+                icon="list_alt"
                 title="No listings created yet"
                 body="Use the Manager Listing Console to list a project on-chain. It will appear here."
               />
             ) : (
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                 <AnimatePresence>
                   {myListings.map((auction) => (
                     <ListingCard

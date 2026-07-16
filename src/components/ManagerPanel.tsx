@@ -1,5 +1,5 @@
 import { FormEvent, useState } from 'react';
-import { Loader2, Plus, ShieldCheck } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import type { CreateAuctionInput } from '../services/soroban';
 
 interface ManagerPanelProps {
@@ -46,89 +46,93 @@ export function ManagerPanel({ walletAddress, contractReady, networkLabel, onCon
   };
 
   const inputClass =
-    'mt-2 w-full rounded-md border border-cream-300 bg-cream-50 px-3 py-3 text-sm text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/30 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:border-cyan-400';
+    'mt-1.5 w-full rounded-lg border border-outline-variant bg-surface-container-low px-3.5 py-2.5 text-body-sm text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-700 dark:focus:ring-slate-800 placeholder:text-outline';
 
   return (
-    <section className="rounded-lg border border-cream-300 bg-cream-50 p-5 dark:border-slate-800 dark:bg-slate-950">
-      <div className="mb-5 flex items-start gap-3">
-        <div className="rounded-md border border-emerald-300 bg-emerald-50 p-2 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-200">
-          <ShieldCheck size={20} />
-        </div>
-        <div>
-          <h2 className="text-lg font-bold text-slate-900 dark:text-white">Manager Listing Console</h2>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-            List a project on-chain, set the opening bid, and let connected wallets compete.
-          </p>
-        </div>
-      </div>
-
+    <div className="space-y-4">
       <form onSubmit={submit} className="space-y-4">
-        <label className="block">
-          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Project title</span>
-          <input
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            required
-            maxLength={80}
-            className={inputClass}
-          />
-        </label>
-
-        <label className="block">
-          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Description</span>
-          <textarea
-            value={description}
-            onChange={(event) => setDescription(event.target.value)}
-            required
-            rows={4}
-            maxLength={360}
-            className={`${inputClass} resize-none`}
-          />
-        </label>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
           <label className="block">
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Starting bid</span>
+            <span className="text-label-sm font-semibold uppercase tracking-wide text-on-surface-variant dark:text-slate-400">Project title</span>
             <input
-              value={startingBidXlm}
-              onChange={(event) => setStartingBidXlm(event.target.value)}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
               required
-              inputMode="decimal"
+              maxLength={80}
+              placeholder="e.g. Stellar Dex Integration"
               className={inputClass}
             />
           </label>
+        </div>
 
+        <div>
           <label className="block">
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Duration hours</span>
-            <input
-              type="number"
-              min={1}
-              max={720}
-              value={durationHours}
-              onChange={(event) => setDurationHours(Number(event.target.value))}
+            <span className="text-label-sm font-semibold uppercase tracking-wide text-on-surface-variant dark:text-slate-400">Description</span>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               required
-              className={inputClass}
+              rows={3}
+              maxLength={360}
+              placeholder="Describe the scope, deliverables, and repo link..."
+              className={`${inputClass} resize-none`}
             />
           </label>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block">
+              <span className="text-label-sm font-semibold uppercase tracking-wide text-on-surface-variant dark:text-slate-400">Starting bid (XLM)</span>
+              <input
+                value={startingBidXlm}
+                onChange={(e) => setStartingBidXlm(e.target.value)}
+                required
+                inputMode="decimal"
+                className={inputClass}
+              />
+            </label>
+          </div>
+
+          <div>
+            <label className="block">
+              <span className="text-label-sm font-semibold uppercase tracking-wide text-on-surface-variant dark:text-slate-400">Duration (Hours)</span>
+              <input
+                type="number"
+                min={1}
+                max={720}
+                value={durationHours}
+                onChange={(e) => setDurationHours(Number(e.target.value))}
+                required
+                className={inputClass}
+              />
+            </label>
+          </div>
         </div>
 
         {!contractReady && (
-          <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-100">
-            Configure the {networkLabel} auction contract and native token before listing projects on-chain.
-          </p>
+          <div className="rounded-lg border border-secondary-container/40 bg-secondary-container/10 px-3.5 py-2.5 text-body-sm text-on-secondary-container">
+            <span className="font-bold">Notice:</span> Preview mode active. Configure the {networkLabel} contract to deploy on-chain.
+          </div>
         )}
 
         {error && (
-          <p className="rounded-md bg-red-100 px-3 py-2 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-300">
+          <div className="rounded-lg bg-error-container border border-error/30 px-3.5 py-2.5 text-body-sm text-on-error-container">
             {error}
-          </p>
+          </div>
         )}
 
-        <button type="submit" disabled={busy || !contractReady} className="btn-primary w-full justify-center stable-button">
-          {busy ? <Loader2 className="animate-spin" size={18} /> : <Plus size={18} />}
-          {!contractReady ? `${networkLabel} Contract Not Configured` : walletAddress ? 'List Project' : 'Connect Wallet to List'}
+        <button
+          type="submit"
+          disabled={busy}
+          className="btn-primary w-full justify-center stable-button mt-2"
+        >
+          {busy ? <Loader2 className="animate-spin" size={16} /> : (
+            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
+          )}
+          {!contractReady ? 'List in Preview Mode' : walletAddress ? 'Deploy On-Chain Listing' : 'Connect Wallet to List'}
         </button>
       </form>
-    </section>
+    </div>
   );
 }
