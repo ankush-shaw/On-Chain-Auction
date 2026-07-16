@@ -38,7 +38,7 @@
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
                 },
                 {
-                  "i128": "1000"
+                  "i128": "10000"
                 }
               ]
             }
@@ -49,18 +49,15 @@
     ],
     [
       [
-        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAK3IM",
+        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4",
         {
           "function": {
             "contract_fn": {
-              "contract_address": "CACMVW2KK4H5FZDFF2AUCAKQTEJMZZWJUIZF23XMRVYQBSXYLHZ6BKWN",
-              "function_name": "mint",
+              "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "function_name": "set_treasury",
               "args": [
                 {
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
-                },
-                {
-                  "i128": "1000"
                 }
               ]
             }
@@ -88,10 +85,10 @@
                   "u32": 1
                 },
                 {
-                  "string": "Website redesign"
+                  "string": "BIN + fee"
                 },
                 {
-                  "string": "A scoped project listing"
+                  "string": "Combo"
                 },
                 {
                   "i128": "100"
@@ -99,7 +96,9 @@
                 {
                   "u64": "3600"
                 },
-                "void"
+                {
+                  "i128": "1000"
+                }
               ]
             }
           },
@@ -123,7 +122,7 @@
                   "u32": 1
                 },
                 {
-                  "i128": "150"
+                  "i128": "1000"
                 }
               ]
             }
@@ -142,55 +141,7 @@
                       "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM"
                     },
                     {
-                      "i128": "150"
-                    }
-                  ]
-                }
-              },
-              "sub_invocations": []
-            }
-          ]
-        }
-      ]
-    ],
-    [],
-    [],
-    [
-      [
-        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4",
-        {
-          "function": {
-            "contract_fn": {
-              "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
-              "function_name": "place_bid",
-              "args": [
-                {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
-                },
-                {
-                  "u32": 1
-                },
-                {
-                  "i128": "225"
-                }
-              ]
-            }
-          },
-          "sub_invocations": [
-            {
-              "function": {
-                "contract_fn": {
-                  "contract_address": "CACMVW2KK4H5FZDFF2AUCAKQTEJMZZWJUIZF23XMRVYQBSXYLHZ6BKWN",
-                  "function_name": "transfer",
-                  "args": [
-                    {
-                      "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
-                    },
-                    {
-                      "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM"
-                    },
-                    {
-                      "i128": "225"
+                      "i128": "1000"
                     }
                   ]
                 }
@@ -288,21 +239,23 @@
                                     "symbol": "bid_count"
                                   },
                                   "val": {
-                                    "u32": 2
+                                    "u32": 1
                                   }
                                 },
                                 {
                                   "key": {
                                     "symbol": "buy_it_now_price"
                                   },
-                                  "val": "void"
+                                  "val": {
+                                    "i128": "1000"
+                                  }
                                 },
                                 {
                                   "key": {
                                     "symbol": "description"
                                   },
                                   "val": {
-                                    "string": "A scoped project listing"
+                                    "string": "Combo"
                                   }
                                 },
                                 {
@@ -318,7 +271,7 @@
                                     "symbol": "highest_bid"
                                   },
                                   "val": {
-                                    "i128": "225"
+                                    "i128": "1000"
                                   }
                                 },
                                 {
@@ -326,7 +279,7 @@
                                     "symbol": "highest_bidder"
                                   },
                                   "val": {
-                                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
                                   }
                                 },
                                 {
@@ -350,7 +303,7 @@
                                     "symbol": "settled"
                                   },
                                   "val": {
-                                    "bool": false
+                                    "bool": true
                                   }
                                 },
                                 {
@@ -366,7 +319,7 @@
                                     "symbol": "title"
                                   },
                                   "val": {
-                                    "string": "Website redesign"
+                                    "string": "BIN + fee"
                                   }
                                 },
                                 {
@@ -389,6 +342,14 @@
                       },
                       "val": {
                         "u32": 1
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "TREASURY"
+                      },
+                      "val": {
+                        "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
                       }
                     }
                   ]
@@ -449,26 +410,6 @@
               "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4",
               "key": {
                 "ledger_key_nonce": {
-                  "nonce": "4270020994084947596"
-                }
-              },
-              "durability": "temporary",
-              "val": "void"
-            }
-          },
-          "ext": "v0"
-        },
-        "live_until": 6311999
-      },
-      {
-        "entry": {
-          "last_modified_ledger_seq": 0,
-          "data": {
-            "contract_data": {
-              "ext": "v0",
-              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAK3IM",
-              "key": {
-                "ledger_key_nonce": {
                   "nonce": "1033654523790656264"
                 }
               },
@@ -525,7 +466,59 @@
                       "symbol": "amount"
                     },
                     "val": {
-                      "i128": "225"
+                      "i128": "0"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "authorized"
+                    },
+                    "val": {
+                      "bool": true
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "clawback"
+                    },
+                    "val": {
+                      "bool": false
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 518400
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CACMVW2KK4H5FZDFF2AUCAKQTEJMZZWJUIZF23XMRVYQBSXYLHZ6BKWN",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "Balance"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "amount"
+                    },
+                    "val": {
+                      "i128": "980"
                     }
                   },
                   {
@@ -577,7 +570,7 @@
                       "symbol": "amount"
                     },
                     "val": {
-                      "i128": "1000"
+                      "i128": "9000"
                     }
                   },
                   {
@@ -629,7 +622,7 @@
                       "symbol": "amount"
                     },
                     "val": {
-                      "i128": "775"
+                      "i128": "20"
                     }
                   },
                   {

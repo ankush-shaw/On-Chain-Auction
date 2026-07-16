@@ -21,4 +21,8 @@ export interface AuctionListing {
   settled: boolean;
   status: AuctionStatus;
   isPreview?: boolean;
+  /** Optional instant‑purchase price (in stroops). */
+  buyItNowPrice?: string | null;
+  /** Number of bids placed on this auction. */
+  bidCount?: number;
 }

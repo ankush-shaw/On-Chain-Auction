@@ -23,6 +23,8 @@ export const demoAuctions: AuctionListing[] = [
     endTime: now + 86_400,
     settled: false,
     status: 'live',
+    buyItNowPrice: '500000000',
+    bidCount: 3,
   },
   {
     id: 102,
@@ -38,6 +40,8 @@ export const demoAuctions: AuctionListing[] = [
     endTime: now + 172_800,
     settled: false,
     status: 'live',
+    buyItNowPrice: null,
+    bidCount: 0,
   },
   {
     id: 103,
@@ -53,5 +57,7 @@ export const demoAuctions: AuctionListing[] = [
     endTime: now - 3_600,
     settled: true,
     status: 'settled',
+    buyItNowPrice: null,
+    bidCount: 5,
   },
 ];

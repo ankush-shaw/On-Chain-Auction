@@ -67,6 +67,8 @@ export type CreateAuctionInput = {
   description: string;
   startingBidXlm: string;
   durationHours: number;
+  /** Optional buy-it-now price in XLM (e.g. "50"). */
+  buyItNowPriceXlm?: string;
 };
 
 export type PlaceBidInput = {
@@ -252,6 +254,16 @@ export async function createAuction(input: CreateAuctionInput, network: StellarN
   const contract = getAuctionContract(network);
   const account = await server.getAccount(input.sellerAddress);
 
+  // Build the optional buy-it-now ScVal.
+  const buyNowScVal = input.buyItNowPriceXlm && input.buyItNowPriceXlm.trim()
+    ? nativeToScVal(parseXlmToStroops(input.buyItNowPriceXlm).toString(), { type: 'i128' })
+    : null;
+
+  // Encode Option<i128>: Some(val) or None.
+  const buyNowOptionScVal = buyNowScVal
+    ? nativeToScVal([buyNowScVal], { type: { type: 'option', value: { type: 'i128' } } } as any)
+    : nativeToScVal(null);
+
   const tx = new TransactionBuilder(account, {
     fee: '1000000',
     networkPassphrase: config.networkPassphrase,
@@ -265,7 +277,8 @@ export async function createAuction(input: CreateAuctionInput, network: StellarN
         nativeToScVal(input.title, { type: 'string' }),
         nativeToScVal(input.description, { type: 'string' }),
         nativeToScVal(startingBid.toString(), { type: 'i128' }),
-        nativeToScVal(durationSeconds, { type: 'u64' })
+        nativeToScVal(durationSeconds, { type: 'u64' }),
+        buyNowOptionScVal
       )
     )
     .setTimeout(30)
@@ -415,6 +428,11 @@ function normalizeAuction(value: any, network: StellarNetwork = 'testnet'): Auct
   const highestBidder = normalizeAddress(record.highest_bidder ?? record.highestBidder);
   const status: AuctionStatus = settled ? 'settled' : endTime <= now ? 'ended' : 'live';
 
+  // Extract optional buy-it-now price.
+  const rawBin = record.buy_it_now_price ?? record.buyItNowPrice;
+  const buyItNowPrice = rawBin != null ? String(rawBin) : null;
+  const bidCount = Number(record.bid_count ?? record.bidCount ?? 0);
+
   return {
     id: Number(record.id),
     seller: normalizeAddress(record.seller) ?? '',
@@ -427,6 +445,8 @@ function normalizeAuction(value: any, network: StellarNetwork = 'testnet'): Auct
     endTime,
     settled,
     status,
+    buyItNowPrice,
+    bidCount,
   };
 }
 

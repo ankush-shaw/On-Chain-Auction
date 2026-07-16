@@ -30,9 +30,18 @@ export function AuctionCard({
 
   const currentPrice = auction.highestBid !== '0' ? auction.highestBid : auction.startingBid;
   const minimumBid = useMemo(() => {
-    const next = BigInt(currentPrice) + (auction.highestBid === '0' ? 0n : 1n);
-    return formatStroops(next);
-  }, [auction.highestBid, currentPrice]);
+    if (auction.highestBid === '0') {
+      // No bids yet – must meet starting bid.
+      return formatStroops(BigInt(auction.startingBid));
+    }
+    const hb = BigInt(auction.highestBid);
+    // 5% increment, rounded up: hb + ceil(hb * 500 / 10000)
+    const increment = (hb * 500n + 9999n) / 10000n;
+    return formatStroops(hb + increment);
+  }, [auction.highestBid, auction.startingBid]);
+
+  const hasBuyNow = auction.buyItNowPrice && auction.buyItNowPrice !== '0' && !auction.settled;
+  const buyNowFormatted = hasBuyNow ? formatStroops(auction.buyItNowPrice!) : null;
 
   const timeLabel = useMemo(() => {
     const seconds = auction.endTime - Math.floor(Date.now() / 1000);
@@ -145,15 +154,21 @@ export function AuctionCard({
       </div>
 
       {/* ── Bid Data Row ── */}
-      <div className="mx-5 grid grid-cols-2 gap-3 border-t border-outline-variant pt-4">
+      <div className={`mx-5 grid ${hasBuyNow ? 'grid-cols-3' : 'grid-cols-2'} gap-3 border-t border-outline-variant pt-4`}>
         <div className="bg-surface-container rounded-lg px-3 py-2.5">
           <p className="text-label-sm text-on-surface-variant uppercase tracking-wide">Current Bid</p>
           <p className="mt-0.5 text-body-md font-bold text-primary">{formatStroops(currentPrice)} <span className="text-label-sm font-semibold text-on-surface-variant">XLM</span></p>
         </div>
         <div className="bg-surface-container rounded-lg px-3 py-2.5">
-          <p className="text-label-sm text-on-surface-variant uppercase tracking-wide">Next Min.</p>
+          <p className="text-label-sm text-on-surface-variant uppercase tracking-wide">Next Min. (+5%)</p>
           <p className="mt-0.5 text-body-md font-bold text-primary">{minimumBid} <span className="text-label-sm font-semibold text-on-surface-variant">XLM</span></p>
         </div>
+        {hasBuyNow && (
+          <div className="bg-secondary-container/15 border border-secondary/20 rounded-lg px-3 py-2.5">
+            <p className="text-label-sm text-secondary uppercase tracking-wide">Buy It Now</p>
+            <p className="mt-0.5 text-body-md font-bold text-secondary">{buyNowFormatted} <span className="text-label-sm font-semibold text-on-surface-variant">XLM</span></p>
+          </div>
+        )}
       </div>
 
       {/* ── Meta row ── */}
@@ -164,9 +179,17 @@ export function AuctionCard({
             {auction.seller.slice(0, 6)}…{auction.seller.slice(-4)}
           </span>
         </span>
-        <span className="flex items-center gap-1.5 text-primary font-semibold">
-          <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>schedule</span>
-          {timeLabel}
+        <span className="flex items-center gap-2">
+          {auction.bidCount != null && auction.bidCount > 0 && (
+            <span className="flex items-center gap-1 text-secondary font-semibold">
+              <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>how_to_vote</span>
+              {auction.bidCount} bid{auction.bidCount !== 1 ? 's' : ''}
+            </span>
+          )}
+          <span className="flex items-center gap-1.5 text-primary font-semibold">
+            <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>schedule</span>
+            {timeLabel}
+          </span>
         </span>
       </div>
 
@@ -190,6 +213,7 @@ export function AuctionCard({
       {/* ── Action Zone ── */}
       <div className="mt-4 mx-5 mb-5 flex-1 flex flex-col justify-end gap-2">
         {auction.status === 'live' ? (
+          <>
           <div className="flex gap-2">
             <input
               value={bidAmount}
@@ -209,6 +233,30 @@ export function AuctionCard({
               {canTransact ? 'Bid' : 'Preview'}
             </button>
           </div>
+          {/* Buy It Now button */}
+          {hasBuyNow && canTransact && (
+            <button
+              onClick={async () => {
+                if (!walletAddress) { onConnect(); return; }
+                setBusy('bid');
+                setError(null);
+                try {
+                  await onBid(auction.id, buyNowFormatted!);
+                  setBidAmount('');
+                } catch (e: any) {
+                  setError(e.message || 'Buy It Now failed.');
+                } finally {
+                  setBusy(null);
+                }
+              }}
+              disabled={busy !== null}
+              className="w-full flex items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-secondary/10 px-4 py-2.5 text-body-sm font-bold text-secondary hover:bg-secondary hover:text-on-secondary transition-all stable-button"
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>shopping_cart</span>
+              Buy It Now — {buyNowFormatted} XLM
+            </button>
+          )}
+          </>
         ) : (
           <button
             onClick={settle}
