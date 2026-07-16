@@ -43,28 +43,29 @@ export function BidPriceChart({ auction }: BidPriceChartProps) {
 
   const lastPoint = svgPoints[svgPoints.length - 1];
   const isSettled = auction.status === 'settled';
-  const lineColor = isSettled ? '#22c55e' : '#6366f1'; // green for settled, indigo for live
+  // Use success-green for settled, auction-live for active, or outline for upcoming/preview
+  const lineColor = isSettled ? '#2E7D32' : '#E91E63'; 
   const gradId = `bid-grad-${auction.id}`;
 
   return (
-    <div className="mt-4 rounded-xl border border-cream-300 bg-white/60 p-4 dark:border-slate-700 dark:bg-slate-900/60 backdrop-blur-sm">
+    <div className="bg-surface-container rounded-b-xl border-t border-outline-variant p-4">
       {/* Header row */}
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-          Price Chart
+        <span className="text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">
+          Bid History Analytics
         </span>
         <div className="flex items-center gap-2">
           {hasBids && (
-            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+            <span className={`text-label-sm font-semibold px-2 py-0.5 rounded-full ${
               premiumPct > 0
-                ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400'
-                : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                ? 'bg-success-green/10 text-success-green'
+                : 'bg-surface-container-high text-on-surface-variant'
             }`}>
-              +{premiumPct}% above start
+              +{premiumPct}% vs start
             </span>
           )}
           {!hasBids && (
-            <span className="text-xs font-semibold text-slate-400 dark:text-slate-500">No bids yet</span>
+            <span className="text-label-sm font-semibold text-outline">No bids yet</span>
           )}
         </div>
       </div>
@@ -78,7 +79,7 @@ export function BidPriceChart({ auction }: BidPriceChartProps) {
       >
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={lineColor} stopOpacity="0.25" />
+            <stop offset="0%" stopColor={lineColor} stopOpacity="0.2" />
             <stop offset="100%" stopColor={lineColor} stopOpacity="0" />
           </linearGradient>
         </defs>
@@ -92,9 +93,9 @@ export function BidPriceChart({ auction }: BidPriceChartProps) {
             x2={WIDTH - PAD_X}
             y2={PAD_Y + chartH * frac}
             stroke="currentColor"
-            strokeOpacity="0.07"
+            strokeOpacity="0.1"
             strokeWidth="1"
-            className="text-slate-500"
+            className="text-outline"
           />
         ))}
 
@@ -117,10 +118,10 @@ export function BidPriceChart({ auction }: BidPriceChartProps) {
             key={i}
             cx={p.x}
             cy={p.y}
-            r={i === svgPoints.length - 1 ? 4 : 2.5}
+            r={i === svgPoints.length - 1 ? 3.5 : 2}
             fill={i === svgPoints.length - 1 ? lineColor : 'white'}
             stroke={lineColor}
-            strokeWidth={i === svgPoints.length - 1 ? 2 : 1.5}
+            strokeWidth={i === svgPoints.length - 1 ? 1.5 : 1}
           />
         ))}
 
@@ -139,40 +140,40 @@ export function BidPriceChart({ auction }: BidPriceChartProps) {
 
       {/* Metrics row */}
       <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-        <div className="rounded-lg bg-cream-100/80 px-2 py-1.5 dark:bg-slate-800/60">
-          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Start</p>
-          <p className="text-xs font-bold text-slate-700 dark:text-slate-300 mt-0.5">
+        <div className="rounded-lg bg-surface-container-low px-2 py-1.5 border border-outline-variant">
+          <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Start</p>
+          <p className="text-label-sm font-bold text-primary mt-0.5">
             {formatStroops(auction.startingBid)} XLM
           </p>
         </div>
-        <div className="rounded-lg bg-cream-100/80 px-2 py-1.5 dark:bg-slate-800/60">
-          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Current</p>
-          <p className="text-xs font-bold text-slate-700 dark:text-slate-300 mt-0.5">
+        <div className="rounded-lg bg-surface-container-low px-2 py-1.5 border border-outline-variant">
+          <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Current</p>
+          <p className="text-label-sm font-bold text-primary mt-0.5">
             {hasBids ? `${formatStroops(auction.highestBid)} XLM` : '—'}
           </p>
         </div>
-        <div className="rounded-lg bg-cream-100/80 px-2 py-1.5 dark:bg-slate-800/60">
-          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Progress</p>
-          <p className="text-xs font-bold text-slate-700 dark:text-slate-300 mt-0.5">{progressPct}%</p>
+        <div className="rounded-lg bg-surface-container-low px-2 py-1.5 border border-outline-variant">
+          <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Progress</p>
+          <p className="text-label-sm font-bold text-primary mt-0.5">{progressPct}%</p>
         </div>
       </div>
 
       {/* Auction progress bar */}
       <div className="mt-3">
-        <div className="h-1.5 w-full rounded-full bg-cream-200 dark:bg-slate-800 overflow-hidden">
+        <div className="h-1.5 w-full rounded-full bg-surface-container-high overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-700 ${
               isSettled
-                ? 'bg-emerald-500'
+                ? 'bg-success-green'
                 : progressPct > 75
-                ? 'bg-amber-500'
-                : 'bg-indigo-500'
+                ? 'bg-secondary-container'
+                : 'bg-auction-live'
             }`}
             style={{ width: `${progressPct}%` }}
           />
         </div>
-        <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500 text-right">
-          {isSettled ? 'Auction complete' : `${100 - progressPct}% of window remaining`}
+        <p className="mt-1 text-[10px] text-on-surface-variant font-semibold text-right">
+          {isSettled ? 'Auction complete' : `${100 - progressPct}% duration left`}
         </p>
       </div>
     </div>
