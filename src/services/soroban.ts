@@ -255,15 +255,12 @@ export async function createAuction(input: CreateAuctionInput, network: StellarN
   const contract = getAuctionContract(network);
   const account = await server.getAccount(input.sellerAddress);
 
-  // Build the optional buy-it-now ScVal.
-  const buyNowScVal = input.buyItNowPriceXlm && input.buyItNowPriceXlm.trim()
-    ? nativeToScVal(parseXlmToStroops(input.buyItNowPriceXlm).toString(), { type: 'i128' })
-    : null;
-
-  // Encode Option<i128>: Some(val) or None.
-  const buyNowOptionScVal = buyNowScVal
-    ? nativeToScVal([buyNowScVal], { type: { type: 'option', value: { type: 'i128' } } } as any)
-    : nativeToScVal(null);
+  // Encode Option<i128> for buy_it_now_price. Soroban represents Option<T>
+// on the wire as either ScVal::Void (None) or T's own ScVal directly
+// (Some) — it is NOT a separate wrapper/vec type.
+const buyNowOptionScVal = input.buyItNowPriceXlm && input.buyItNowPriceXlm.trim()
+  ? nativeToScVal(parseXlmToStroops(input.buyItNowPriceXlm).toString(), { type: 'i128' })
+  : nativeToScVal(null);
 
   const tx = new TransactionBuilder(account, {
     fee: '1000000',
