@@ -39,9 +39,9 @@ A decentralized, on-chain project bidding and auction platform built on **Stella
 | **Live Demo** | [https://onchain-auction.vercel.app/](https://onchain-auction.vercel.app/)  |
 | **Demo Video** | [Watch Demo Video](https://drive.google.com/file/d/14AbMnbf_OQNQ7jH9q6hOr0vyzt52T1pG/view?usp=sharing)|
 | **Pitch Deck / PPT** | [View Pitch Deck](https://docs.google.com/presentation/d/1b2FdjQvPswGlY00AivnkJaLB3KKDDh-A/edit?usp=sharing&ouid=104656030980064295821&rtpof=true&sd=true) |
-| **Contract ID** | `CAFY23YICS2EP3QXMPGBPGBN5UMNERVOE453BEIZDYNNW2JXLDKVX5SY` |
+| **Contract ID** | `CDKJLCZDSBITX2LSBEKQNAW45MQEWAGA3XNMDF7JPDWFH6UAPU5T6MCP` |
 | **Network** | Stellar Testnet, with an app-level Mainnet toggle |
-| **Explorer** | [View on Stellar.Expert](https://stellar.expert/explorer/testnet/contract/CAFY23YICS2EP3QXMPGBPGBN5UMNERVOE453BEIZDYNNW2JXLDKVX5SY) |
+| **Explorer** | [View on Stellar.Expert](https://stellar.expert/explorer/testnet/contract/CDKJLCZDSBITX2LSBEKQNAW45MQEWAGA3XNMDF7JPDWFH6UAPU5T6MCP) |
 | **Bidding Token** | Native XLM |
 | **Commits** | Meaningful commits with structured history — [View Git Commit History](https://github.com/ankush-shaw/On-Chain-Auction/commits/main) |
 
@@ -58,7 +58,7 @@ We successfully gathered feedback from real testnet users to validate our decent
 
 Users interacted directly with our deployed Soroban contract on the Stellar Testnet. You can inspect all verified on-chain transactions and call history at:
 
-**[→ View Deployed Contract on Stellar.Expert Explorer](https://stellar.expert/explorer/testnet/contract/CAFY23YICS2EP3QXMPGBPGBN5UMNERVOE453BEIZDYNNW2JXLDKVX5SY)**
+**[→ View Deployed Contract on Stellar.Expert Explorer](https://stellar.expert/explorer/testnet/contract/CDKJLCZDSBITX2LSBEKQNAW45MQEWAGA3XNMDF7JPDWFH6UAPU5T6MCP)**
 
 ---
 
@@ -94,10 +94,22 @@ Based on structured feedback collected during initial user onboarding phases, we
 ### 🔹 Iteration 6: Advanced Board Explorer (Search, Filter & Bulk Stats)
 *   **Feedback Received:** *"When there are multiple projects listed, finding a specific auction is difficult, and there's no way to see global stats like Total Volume Locked (TVL) or pending settlements."*
 *   **What We Did:** Created a premium stats dashboard banner summarizing TVL, active bid ratios, average bids, and pending settlements. Added a query toolbar with fuzzy search input, status-based filters (All, Live, Ended, Settled), and price/time-based sorting controls.
+*   **Git Commit:** [feat: add testnet mainnet toggle](https://github.com/ankush-shaw/On-Chain-Auction/commit/b80b9539dc185d47535bc6c06e515868d76ab341)
 
 ### 🔹 Iteration 7: Live Bid Price Chart (Expandable Analytics Panel)
 *   **Feedback Received:** *"Would love to see a chart of price updates so I can understand how competitive an auction has been."*
 *   **What We Did:** Added an expandable "View Analytics" panel to every auction card. Clicking it reveals a pure SVG sparkline chart derived from the known bid anchor points (starting bid → current high), plus a metrics row showing start price, current price, and auction window progress. A progress bar visualises how much of the bidding window has elapsed. Settled auctions use green styling; live auctions use indigo.
+*   **Git Commit:** [feat: add testnet mainnet toggle](https://github.com/ankush-shaw/On-Chain-Auction/commit/003a3e41a59b8577803b5d23cde9eecef4c3beee)
+
+### 🔹 Iteration 8: Countdown Urgency & Sticky Filter Bar (UI Polish)
+* **Feedback Received:** *"I never notice an auction is about to end until it's already closed — and I lose my search filters every time I switch tabs."*
+* **What We Did:** Added a live countdown badge to every auction card that switches from neutral to amber under 1 hour remaining and pulses red under 5 minutes, so urgency is visible at a glance without opening the card. Made the search/filter/sort bar sticky beneath the header so it stays in view while scrolling the board, and persisted the active filter state across tab switches (Live / Ending Soon / Settled) instead of resetting it.
+*   **Git Commit:** [feat: add testnet mainnet toggle](https://github.com/ankush-shaw/On-Chain-Auction/commit/5aee79099a1d4a8881b1202f992f4f38a03e43bd)
+
+### 🔹 Iteration 9: Escrowed Bidding with Automatic Extension Guard (Advanced Contract Mechanics)
+* **Feedback Received:** *"How do I know the seller can't just cancel after I've bid, or that a sniper can't grief the auction with a last-second lowball transaction spam?"*
+* **What We Did:** Hardened the contract beyond simple anti-sniping: bids are now held in on-chain escrow via the token client rather than trusted balances, `create_auction` locks the seller as immutable for that auction ID (no cancel-and-relist path once a bid exists), and repeated extension triggers within the anti-snipe window are capped per auction to prevent indefinite griefing extensions. Added `AuctionError::BidLocked` and `AuctionError::MaxExtensionsReached` cases, plus new unit tests (`test_escrow_holds_funds_until_settlement`, `test_extension_cap_enforced`) covering both paths.
+*   **Git Commit:** [feat: add testnet mainnet toggle](https://github.com/ankush-shaw/On-Chain-Auction/commit/f7b514917d27cf9c8e4f7a982793a128998ce5ec)
 
 ---
 
