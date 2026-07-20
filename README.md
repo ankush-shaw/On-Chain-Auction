@@ -191,12 +191,14 @@ graph TD
 The core contract source code is located in [`contracts/auction-contract`](file:///c:/Users/ankus/OneDrive/Desktop/FUN%20PROJECTS/Stellar%20wallet%20project/contracts/auction-contract).
 
 | Function | Arguments | Description |
-|---|---|---|
-| **`create_auction`** | `seller: Address`, `token: Address`, `id: u32`, `title: String`, `description: String`, `starting_bid: i128`, `duration_seconds: u64` | Registers a new auction on-chain with target parameters and duration. |
-| **`get_auction`** | `id: u32` | Retrieves details and active bid info for the given auction ID. |
-| **`get_auction_count`** | *None* | Returns the total count of registered auctions. |
-| **`place_bid`** | `bidder: Address`, `id: u32`, `amount: i128` | Submits a new highest bid. Safely locks new funds and refunds the previous bidder. |
-| **`settle_auction`** | `id: u32` | Finalizes the auction (must be ended). Transfers the locked highest bid to the seller. |
+|:---|:---|:---|
+| `set_treasury` | `treasury: Address` | Sets the platform-fee recipient address. Requires the treasury account's own auth. |
+| `get_treasury` | *None* | Returns the currently configured treasury address, if any. |
+| `create_auction` | `seller: Address`, `token: Address`, `id: u32`, `title: String`, `description: String`, `starting_bid: i128`, `duration_seconds: u64`, `buy_it_now_price: Option<i128>` | Registers a new auction on-chain with target parameters, duration, and an optional instant buy-it-now price. |
+| `get_auction` | `id: u32` | Retrieves details and active bid info for the given auction ID. |
+| `get_auction_count` | *None* | Returns the total count of registered auctions. |
+| `place_bid` | `bidder: Address`, `id: u32`, `amount: i128` | Submits a new highest bid. Safely locks new funds and refunds the previous bidder. |
+| `settle_auction` | `id: u32` | Finalizes the auction (must be ended). Transfers the locked highest bid to the seller, minus any platform fee. |
 
 ---
 
