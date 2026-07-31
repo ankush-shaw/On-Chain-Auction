@@ -5,6 +5,7 @@ import { AuctionCard } from './components/AuctionCard';
 import { ManagerPanel } from './components/ManagerPanel';
 import { UserDashboard } from './components/UserDashboard';
 import { WalletConnectModal } from './components/WalletConnectModal';
+import { Logo } from './components/Logo';
 import { ExplorerStats } from './components/ExplorerStats';
 import { ExplorerToolbar, StatusFilterType } from './components/ExplorerToolbar';
 import { useWallet } from './hooks/useWallet';
@@ -205,18 +206,13 @@ function App() {
     <div className="min-h-screen bg-background text-on-surface font-sans dark:bg-[#030914] dark:text-slate-100 transition-colors duration-300">
 
       {/* ══ STICKY HEADER — Deep Navy / Gold ══ */}
-      <header className="bg-primary sticky top-0 z-50 shadow-sm border-b border-white/10 dark:bg-slate-950 dark:border-slate-900">
+      <header className="bg-primary/95 backdrop-blur-md sticky top-0 z-50 shadow-lg border-b border-white/10 dark:bg-slate-950/95 dark:border-slate-800/60">
         <div className="mx-auto flex max-w-container-max items-center justify-between px-gutter py-3">
 
           {/* Logo + Nav */}
           <div className="flex items-center gap-8">
-            <a href="/" className="flex items-center gap-2 select-none">
-              <div className="w-8 h-8 rounded-lg bg-secondary-container flex items-center justify-center">
-                <span className="material-symbols-outlined text-primary" style={{fontSize:'18px'}}>gavel</span>
-              </div>
-              <span className="text-headline-sm font-black text-secondary-container tracking-tight">
-                OnChain<span className="text-on-primary">Auction</span>
-              </span>
+            <a href="/" className="flex items-center gap-2 select-none group">
+              <Logo size={34} showText={true} textClassName="text-headline-sm hidden sm:inline" />
             </a>
             <nav className="hidden md:flex gap-6 items-center">
               <button
@@ -308,38 +304,43 @@ function App() {
 
       <main>
         {/* ══ HERO — headline left + Manager Panel right ══ */}
-        <section className="relative bg-surface-container-lowest overflow-hidden border-b border-outline-variant dark:bg-slate-900/20 dark:border-slate-800/80">
-          <div className="mx-auto max-w-container-max px-gutter py-16 lg:py-20 flex flex-col lg:flex-row items-center gap-12">
+        <section className="relative bg-surface-container-lowest overflow-hidden border-b border-outline-variant dark:bg-slate-900/20 dark:border-slate-800/80 hero-grid-bg">
+          {/* Floating glow orbs */}
+          <div className="absolute top-20 -left-24 w-80 h-80 bg-secondary-container/8 blur-[100px] rounded-full pointer-events-none animate-float" />
+          <div className="absolute -bottom-20 right-10 w-96 h-96 bg-primary/5 blur-[120px] rounded-full pointer-events-none" style={{animationDelay: '1.5s'}} />
+          <div className="absolute top-10 right-1/3 w-48 h-48 bg-secondary-container/4 blur-[80px] rounded-full pointer-events-none animate-float" style={{animationDelay: '0.8s'}} />
+
+          <div className="mx-auto max-w-container-max px-gutter py-16 lg:py-24 flex flex-col lg:flex-row items-center gap-12">
 
             {/* Left: headline + inline stats */}
             <div className="flex-1 space-y-6 text-center lg:text-left z-10">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-surface-container rounded-full text-label-sm uppercase tracking-wider text-primary dark:bg-slate-800 dark:text-slate-300">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-surface-container rounded-full text-label-sm uppercase tracking-wider text-primary dark:bg-slate-800/80 dark:text-slate-300 border border-outline-variant/30 dark:border-slate-700/50 animate-shimmer">
                 <span className="flex h-2 w-2 rounded-full bg-success-green animate-pulse" />
                 On-chain · Stellar Soroban · {networkConfig.label}
               </div>
 
               <h1 className="text-headline-xl text-primary leading-[1.1] dark:text-slate-100">
                 Bid on Projects.<br />
-                <span className="text-secondary dark:text-secondary-container">Settle On-Chain.</span>
+                <span className="gradient-text-gold">Settle On-Chain.</span>
               </h1>
 
-              <p className="text-body-lg text-on-surface-variant max-w-xl mx-auto lg:mx-0 dark:text-slate-400">
+              <p className="text-body-lg text-on-surface-variant max-w-xl mx-auto lg:mx-0 dark:text-slate-400 leading-relaxed">
                 List digital projects, collect XLM bids, and settle the winner trustlessly via Soroban smart contracts. No intermediaries — just your wallet.
               </p>
 
-              <div className="flex gap-6 justify-center lg:justify-start pt-2">
-                <div>
+              <div className="flex gap-8 justify-center lg:justify-start pt-3">
+                <div className="text-center">
                   <div className="text-headline-md font-black text-primary dark:text-slate-200">{stats.total}</div>
                   <div className="text-label-sm text-on-surface-variant uppercase tracking-wide dark:text-slate-450">Listings</div>
                 </div>
-                <div className="w-px bg-outline-variant dark:bg-slate-800" />
-                <div>
+                <div className="w-px bg-outline-variant/50 dark:bg-slate-800" />
+                <div className="text-center">
                   <div className="text-headline-md font-black text-auction-live">{stats.live}</div>
                   <div className="text-label-sm text-on-surface-variant uppercase tracking-wide dark:text-slate-450">Live Now</div>
                 </div>
-                <div className="w-px bg-outline-variant dark:bg-slate-800" />
-                <div>
-                  <div className="text-headline-md font-black text-secondary dark:text-secondary-container">{stats.totalBids}</div>
+                <div className="w-px bg-outline-variant/50 dark:bg-slate-800" />
+                <div className="text-center">
+                  <div className="text-headline-md font-black gradient-text-gold">{stats.totalBids}</div>
                   <div className="text-label-sm text-on-surface-variant uppercase tracking-wide dark:text-slate-450">Active Bids</div>
                 </div>
               </div>
@@ -363,8 +364,8 @@ function App() {
 
             {/* Right: Manager Panel wrapped in Stitch console card */}
             <div className="w-full max-w-[440px] z-10">
-              <div className="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xl ring-1 ring-black/5 overflow-hidden dark:bg-slate-900 dark:border-slate-800">
-                <div className="bg-primary px-6 py-4 flex items-center gap-3 dark:bg-slate-950">
+              <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-2xl ring-1 ring-black/5 overflow-hidden dark:bg-slate-900 dark:border-slate-800 animate-glow-pulse">
+                <div className="bg-primary px-6 py-4 flex items-center gap-3 dark:bg-slate-950 border-b border-white/5">
                   <div className="w-9 h-9 bg-secondary-container/20 rounded-lg flex items-center justify-center">
                     <span className="material-symbols-outlined text-secondary-container" style={{fontSize:'20px'}}>add_circle</span>
                   </div>
@@ -385,7 +386,6 @@ function App() {
               </div>
             </div>
           </div>
-          <div className="absolute -bottom-16 -right-16 w-72 h-72 bg-secondary-container/5 blur-[80px] rounded-full pointer-events-none" />
         </section>
 
         {/* Stats Band */}
@@ -533,12 +533,7 @@ function App() {
       <footer className="bg-primary border-t border-white/10 dark:bg-slate-950 dark:border-slate-900">
         <div className="mx-auto max-w-container-max px-gutter py-12 grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-md bg-secondary-container flex items-center justify-center">
-                <span className="material-symbols-outlined text-primary" style={{fontSize:'16px'}}>gavel</span>
-              </div>
-              <span className="font-black text-secondary-container tracking-tight">OnChain<span className="text-on-primary">Auction</span></span>
-            </div>
+            <Logo size={30} showText={true} textClassName="text-body-md" />
             <p className="text-on-primary opacity-50 text-body-sm leading-relaxed">
               A trustless project auction platform built on Stellar Soroban. Transparent bids, automatic settlement.
             </p>
