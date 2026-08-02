@@ -24,6 +24,7 @@ export const demoAuctions: AuctionListing[] = [
     settled: false,
     status: 'live',
     buyItNowPrice: '500000000',
+    reservePrice: '300000000',
     bidCount: 3,
   },
   {
@@ -41,6 +42,7 @@ export const demoAuctions: AuctionListing[] = [
     settled: false,
     status: 'live',
     buyItNowPrice: null,
+    reservePrice: '600000000',
     bidCount: 0,
   },
   {
@@ -58,6 +60,7 @@ export const demoAuctions: AuctionListing[] = [
     settled: true,
     status: 'settled',
     buyItNowPrice: null,
+    reservePrice: null,
     bidCount: 5,
   },
 ];

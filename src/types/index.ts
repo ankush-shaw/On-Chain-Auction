@@ -23,6 +23,8 @@ export interface AuctionListing {
   isPreview?: boolean;
   /** Optional instant‑purchase price (in stroops). */
   buyItNowPrice?: string | null;
+  /** Optional reserve price (in stroops) required for settlement. */
+  reservePrice?: string | null;
   /** Number of bids placed on this auction. */
   bidCount?: number;
 }

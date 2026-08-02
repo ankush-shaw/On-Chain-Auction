@@ -322,7 +322,8 @@ async function deployAndSeed() {
           nativeToScVal(item.description, { type: 'string' }),
           nativeToScVal(parseXlmToStroops(item.startingBid).toString(), { type: 'i128' }),
           nativeToScVal(durationSeconds, { type: 'u64' }),
-          nativeToScVal(null) // buy_it_now_price option
+          nativeToScVal(null), // buy_it_now_price option
+          nativeToScVal(null) // reserve_price option
         )
       )
       .setTimeout(30)

@@ -69,6 +69,8 @@ export type CreateAuctionInput = {
   durationHours: number;
   /** Optional buy-it-now price in XLM (e.g. "50"). */
   buyItNowPriceXlm?: string;
+  /** Optional reserve price in XLM (e.g. "30"). */
+  reservePriceXlm?: string;
 };
 
 export type PlaceBidInput = {
@@ -255,12 +257,13 @@ export async function createAuction(input: CreateAuctionInput, network: StellarN
   const contract = getAuctionContract(network);
   const account = await server.getAccount(input.sellerAddress);
 
-  // Encode Option<i128> for buy_it_now_price. Soroban represents Option<T>
-// on the wire as either ScVal::Void (None) or T's own ScVal directly
-// (Some) — it is NOT a separate wrapper/vec type.
-const buyNowOptionScVal = input.buyItNowPriceXlm && input.buyItNowPriceXlm.trim()
-  ? nativeToScVal(parseXlmToStroops(input.buyItNowPriceXlm).toString(), { type: 'i128' })
-  : nativeToScVal(null);
+  const buyNowOptionScVal = input.buyItNowPriceXlm && input.buyItNowPriceXlm.trim()
+    ? nativeToScVal(parseXlmToStroops(input.buyItNowPriceXlm).toString(), { type: 'i128' })
+    : nativeToScVal(null);
+
+  const reserveOptionScVal = input.reservePriceXlm && input.reservePriceXlm.trim()
+    ? nativeToScVal(parseXlmToStroops(input.reservePriceXlm).toString(), { type: 'i128' })
+    : nativeToScVal(null);
 
   const tx = new TransactionBuilder(account, {
     fee: '1000000',
@@ -276,7 +279,8 @@ const buyNowOptionScVal = input.buyItNowPriceXlm && input.buyItNowPriceXlm.trim(
         nativeToScVal(input.description, { type: 'string' }),
         nativeToScVal(startingBid.toString(), { type: 'i128' }),
         nativeToScVal(durationSeconds, { type: 'u64' }),
-        buyNowOptionScVal
+        buyNowOptionScVal,
+        reserveOptionScVal
       )
     )
     .setTimeout(30)
@@ -331,6 +335,31 @@ export async function settleAuction(auctionId: number, callerAddress: string, ne
   await submitSignedTransaction(tx, network);
   const settled = await simulateCall(network, 'get_auction', [nativeToScVal(auctionId, { type: 'u32' })]);
   return normalizeAuction(settled, network);
+}
+
+export async function cancelAuction(auctionId: number, sellerAddress: string, network: StellarNetwork = 'testnet'): Promise<AuctionListing | null> {
+  const config = getNetworkConfig(network);
+  const server = getServer(network);
+  const contract = getAuctionContract(network);
+  const account = await server.getAccount(sellerAddress);
+
+  const tx = new TransactionBuilder(account, {
+    fee: '1000000',
+    networkPassphrase: config.networkPassphrase,
+  })
+    .addOperation(
+      contract.call(
+        'cancel_auction',
+        Address.fromString(sellerAddress).toScVal(),
+        nativeToScVal(auctionId, { type: 'u32' })
+      )
+    )
+    .setTimeout(30)
+    .build();
+
+  await submitSignedTransaction(tx, network);
+  const cancelled = await simulateCall(network, 'get_auction', [nativeToScVal(auctionId, { type: 'u32' })]);
+  return normalizeAuction(cancelled, network);
 }
 
 async function simulateCall(network: StellarNetwork, funcName: string, args: any[]): Promise<any> {
@@ -426,9 +455,11 @@ function normalizeAuction(value: any, network: StellarNetwork = 'testnet'): Auct
   const highestBidder = normalizeAddress(record.highest_bidder ?? record.highestBidder);
   const status: AuctionStatus = settled ? 'settled' : endTime <= now ? 'ended' : 'live';
 
-  // Extract optional buy-it-now price.
+  // Extract optional buy-it-now & reserve price.
   const rawBin = record.buy_it_now_price ?? record.buyItNowPrice;
   const buyItNowPrice = rawBin != null ? String(rawBin) : null;
+  const rawReserve = record.reserve_price ?? record.reservePrice;
+  const reservePrice = rawReserve != null ? String(rawReserve) : null;
   const bidCount = Number(record.bid_count ?? record.bidCount ?? 0);
 
   return {
@@ -444,6 +475,7 @@ function normalizeAuction(value: any, network: StellarNetwork = 'testnet'): Auct
     settled,
     status,
     buyItNowPrice,
+    reservePrice,
     bidCount,
   };
 }
