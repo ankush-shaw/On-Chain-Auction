@@ -96,6 +96,7 @@
                 {
                   "u64": "60"
                 },
+                "void",
                 "void"
               ]
             }
@@ -286,6 +287,12 @@
                                   "val": {
                                     "u32": 1
                                   }
+                                },
+                                {
+                                  "key": {
+                                    "symbol": "reserve_price"
+                                  },
+                                  "val": "void"
                                 },
                                 {
                                   "key": {

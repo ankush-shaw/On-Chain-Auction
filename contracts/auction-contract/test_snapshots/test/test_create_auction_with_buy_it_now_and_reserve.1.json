@@ -25,10 +25,10 @@
                   "u32": 1
                 },
                 {
-                  "string": "Vintage synth"
+                  "string": "Art piece"
                 },
                 {
-                  "string": "A rare analog instrument"
+                  "string": "Limited edition"
                 },
                 {
                   "i128": "100"
@@ -36,17 +36,19 @@
                 {
                   "u64": "3600"
                 },
-                "void",
-                "void"
+                {
+                  "i128": "500"
+                },
+                {
+                  "i128": "300"
+                }
               ]
             }
           },
           "sub_invocations": []
         }
       ]
-    ],
-    [],
-    []
+    ]
   ],
   "ledger": {
     "protocol_version": 25,
@@ -97,14 +99,16 @@
                                   "key": {
                                     "symbol": "buy_it_now_price"
                                   },
-                                  "val": "void"
+                                  "val": {
+                                    "i128": "500"
+                                  }
                                 },
                                 {
                                   "key": {
                                     "symbol": "description"
                                   },
                                   "val": {
-                                    "string": "A rare analog instrument"
+                                    "string": "Limited edition"
                                   }
                                 },
                                 {
@@ -141,7 +145,9 @@
                                   "key": {
                                     "symbol": "reserve_price"
                                   },
-                                  "val": "void"
+                                  "val": {
+                                    "i128": "300"
+                                  }
                                 },
                                 {
                                   "key": {
@@ -172,7 +178,7 @@
                                     "symbol": "title"
                                   },
                                   "val": {
-                                    "string": "Vintage synth"
+                                    "string": "Art piece"
                                   }
                                 },
                                 {
@@ -242,5 +248,29 @@
       }
     ]
   },
-  "events": []
+  "events": [
+    {
+      "event": {
+        "ext": "v0",
+        "contract_id": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+        "type_": "contract",
+        "body": {
+          "v0": {
+            "topics": [
+              {
+                "symbol": "listed"
+              },
+              {
+                "u32": 1
+              }
+            ],
+            "data": {
+              "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+            }
+          }
+        }
+      },
+      "failed_call": false
+    }
+  ]
 }

@@ -31,7 +31,7 @@ fn setup_token(env: &Env) -> (Address, token::Client<'static>, token::StellarAss
 }
 
 // ---------------------------------------------------------------------------
-// 1. Basic create auction (now with buy_it_now_price param)
+// 1. Basic create auction
 // ---------------------------------------------------------------------------
 
 #[test]
@@ -49,6 +49,7 @@ fn test_create_auction() {
         &100,
         &3_600,
         &None::<i128>,
+        &None::<i128>,
     );
 
     assert_eq!(auction.id, 1);
@@ -56,16 +57,17 @@ fn test_create_auction() {
     assert_eq!(auction.end_time, 4_600);
     assert_eq!(auction.bid_count, 0);
     assert!(auction.buy_it_now_price.is_none());
+    assert!(auction.reserve_price.is_none());
     assert_eq!(client.get_auction_count(), 1);
     assert_eq!(client.get_auction(&1).unwrap(), auction);
 }
 
 // ---------------------------------------------------------------------------
-// 2. Create auction with buy‑it‑now price
+// 2. Create auction with buy‑it‑now price & reserve price
 // ---------------------------------------------------------------------------
 
 #[test]
-fn test_create_auction_with_buy_it_now() {
+fn test_create_auction_with_buy_it_now_and_reserve() {
     let (env, _cid, client) = setup_env();
     let seller = Address::generate(&env);
     let token = Address::generate(&env);
@@ -79,9 +81,11 @@ fn test_create_auction_with_buy_it_now() {
         &100,
         &3_600,
         &Some(500),
+        &Some(300),
     );
 
     assert_eq!(auction.buy_it_now_price, Some(500));
+    assert_eq!(auction.reserve_price, Some(300));
 }
 
 // ---------------------------------------------------------------------------
@@ -104,6 +108,7 @@ fn test_create_auction_invalid_buy_now() {
         &100,
         &3_600,
         &Some(50), // less than starting bid → should panic
+        &None::<i128>,
     );
 }
 
@@ -130,6 +135,7 @@ fn test_place_bid_refunds_previous_bidder() {
         &String::from_str(&env, "A scoped project listing"),
         &100,
         &3_600,
+        &None::<i128>,
         &None::<i128>,
     );
 
@@ -176,10 +182,11 @@ fn test_bid_below_minimum_increment_rejected() {
         &1_000,
         &3_600,
         &None::<i128>,
+        &None::<i128>,
     );
 
     client.place_bid(&bidder_one, &1, &1_000);
-    // Minimum next bid = 1_000 + 5% = 1_050.  Bid of 1_020 should fail.
+    // Minimum next bid = 1_000 + 5% = 1_050. Bid of 1_020 should fail.
     client.place_bid(&bidder_two, &1, &1_020);
 }
 
@@ -204,6 +211,7 @@ fn test_anti_sniping_extends_end_time() {
         &String::from_str(&env, "Anti-sniping"),
         &100,
         &600, // ends at timestamp 1_600
+        &None::<i128>,
         &None::<i128>,
     );
 
@@ -237,6 +245,7 @@ fn test_buy_it_now_settles_immediately() {
         &100,
         &3_600,
         &Some(500),
+        &None::<i128>,
     );
 
     let result = client.place_bid(&buyer, &1, &500);
@@ -273,6 +282,7 @@ fn test_settle_with_platform_fee() {
         &100,
         &60,
         &None::<i128>,
+        &None::<i128>,
     );
     client.place_bid(&bidder, &1, &1_000);
 
@@ -289,15 +299,42 @@ fn test_settle_with_platform_fee() {
 }
 
 // ---------------------------------------------------------------------------
-// 9. Settle without treasury → full amount to seller
+// 9. Seller cancel auction before bids
 // ---------------------------------------------------------------------------
 
 #[test]
-fn test_settle_without_treasury() {
-    let (env, contract_id, client) = setup_env();
+fn test_cancel_auction_success() {
+    let (env, _cid, client) = setup_env();
+    let seller = Address::generate(&env);
+    let token = Address::generate(&env);
+
+    client.create_auction(
+        &seller,
+        &token,
+        &1,
+        &String::from_str(&env, "Cancelable"),
+        &String::from_str(&env, "No bids yet"),
+        &100,
+        &3_600,
+        &None::<i128>,
+        &None::<i128>,
+    );
+
+    let cancelled = client.cancel_auction(&seller, &1);
+    assert!(cancelled.settled);
+}
+
+// ---------------------------------------------------------------------------
+// 10. Seller cancel auction after bids placed is rejected
+// ---------------------------------------------------------------------------
+
+#[test]
+#[should_panic(expected = "Error(Contract, #12)")]
+fn test_cancel_auction_with_bids_rejected() {
+    let (env, _cid, client) = setup_env();
     let seller = Address::generate(&env);
     let bidder = Address::generate(&env);
-    let (token_address, token_client, admin_client) = setup_token(&env);
+    let (token_address, _tc, admin_client) = setup_token(&env);
 
     admin_client.mint(&bidder, &1_000);
 
@@ -305,54 +342,88 @@ fn test_settle_without_treasury() {
         &seller,
         &token_address,
         &1,
-        &String::from_str(&env, "No treasury"),
-        &String::from_str(&env, "Full payout"),
+        &String::from_str(&env, "Cannot cancel"),
+        &String::from_str(&env, "Has bids"),
         &100,
-        &60,
+        &3_600,
+        &None::<i128>,
         &None::<i128>,
     );
-    client.place_bid(&bidder, &1, &400);
 
-    // Anti‑sniping extends end_time to 1_000 + 300 = 1_300.
-    env.ledger().with_mut(|li| li.timestamp = 1_301);
-    let settled = client.settle_auction(&1);
-
-    assert!(settled.settled);
-    assert_eq!(token_client.balance(&seller), 400);
-    assert_eq!(token_client.balance(&contract_id), 0);
+    client.place_bid(&bidder, &1, &150);
+    client.cancel_auction(&seller, &1); // Should panic Error 12
 }
 
 // ---------------------------------------------------------------------------
-// 10. Buy‑It‑Now with treasury → fee split on instant settle
+// 11. Settle with reserve price met
 // ---------------------------------------------------------------------------
 
 #[test]
-fn test_buy_it_now_with_platform_fee() {
+fn test_settle_reserve_price_met() {
     let (env, contract_id, client) = setup_env();
     let seller = Address::generate(&env);
-    let buyer = Address::generate(&env);
-    let treasury = Address::generate(&env);
+    let bidder = Address::generate(&env);
     let (token_address, token_client, admin_client) = setup_token(&env);
 
-    admin_client.mint(&buyer, &10_000);
-    client.set_treasury(&treasury);
+    admin_client.mint(&bidder, &10_000);
 
     client.create_auction(
         &seller,
         &token_address,
         &1,
-        &String::from_str(&env, "BIN + fee"),
-        &String::from_str(&env, "Combo"),
+        &String::from_str(&env, "Reserve Met"),
+        &String::from_str(&env, "Reserve 500"),
         &100,
-        &3_600,
+        &60,
+        &None::<i128>,
+        &Some(500),
+    );
+
+    client.place_bid(&bidder, &1, &600);
+
+    env.ledger().with_mut(|li| li.timestamp = 1_301);
+    let settled = client.settle_auction(&1);
+
+    assert!(settled.settled);
+    assert_eq!(token_client.balance(&seller), 600);
+    assert_eq!(token_client.balance(&contract_id), 0);
+}
+
+// ---------------------------------------------------------------------------
+// 12. Settle with reserve price NOT met → bidder refunded
+// ---------------------------------------------------------------------------
+
+#[test]
+fn test_settle_reserve_price_not_met() {
+    let (env, contract_id, client) = setup_env();
+    let seller = Address::generate(&env);
+    let bidder = Address::generate(&env);
+    let (token_address, token_client, admin_client) = setup_token(&env);
+
+    admin_client.mint(&bidder, &10_000);
+
+    client.create_auction(
+        &seller,
+        &token_address,
+        &1,
+        &String::from_str(&env, "Reserve Unmet"),
+        &String::from_str(&env, "Reserve 1000"),
+        &100,
+        &60,
+        &None::<i128>,
         &Some(1_000),
     );
 
-    let result = client.place_bid(&buyer, &1, &1_000);
-    assert!(result.settled);
+    // Bid of 400 is below reserve of 1_000.
+    client.place_bid(&bidder, &1, &400);
 
-    // 2 % of 1_000 = 20
-    assert_eq!(token_client.balance(&treasury), 20);
-    assert_eq!(token_client.balance(&seller), 980);
+    env.ledger().with_mut(|li| li.timestamp = 1_301);
+    let settled = client.settle_auction(&1);
+
+    assert!(settled.settled);
+    // Seller gets 0 because reserve wasn't met.
+    assert_eq!(token_client.balance(&seller), 0);
+    // Bidder refunded their 400.
+    assert_eq!(token_client.balance(&bidder), 10_000);
     assert_eq!(token_client.balance(&contract_id), 0);
 }

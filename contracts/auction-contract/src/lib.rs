@@ -47,9 +47,11 @@ pub struct Auction {
     pub token: Address,
     pub end_time: u64,
     pub settled: bool,
-    /// Optional instant‑purchase price.  If a bid meets or exceeds this value
+    /// Optional instant‑purchase price. If a bid meets or exceeds this value
     /// the auction is settled immediately.
     pub buy_it_now_price: Option<i128>,
+    /// Optional minimum hidden/public reserve price that must be met by auction end.
+    pub reserve_price: Option<i128>,
     /// Total number of bids placed on this auction.
     pub bid_count: u32,
 }
@@ -72,6 +74,9 @@ pub enum AuctionError {
     BidTooLow = 8,
     InvalidBuyNowPrice = 9,
     TreasuryNotSet = 10,
+    Unauthorized = 11,
+    CannotCancelWithBids = 12,
+    InvalidReservePrice = 13,
 }
 
 // ---------------------------------------------------------------------------
@@ -88,7 +93,7 @@ impl AuctionContract {
     // -----------------------------------------------------------------------
 
     /// Set or update the platform treasury address that receives fees on
-    /// settlement.  In production this should be guarded by an admin key;
+    /// settlement. In production this should be guarded by an admin key;
     /// for the demo anyone can call it.
     pub fn set_treasury(env: Env, treasury: Address) {
         treasury.require_auth();
@@ -114,6 +119,7 @@ impl AuctionContract {
         starting_bid: i128,
         duration_seconds: u64,
         buy_it_now_price: Option<i128>,
+        reserve_price: Option<i128>,
     ) -> Auction {
         seller.require_auth();
 
@@ -125,10 +131,21 @@ impl AuctionContract {
             panic_with_error!(&env, AuctionError::InvalidBid);
         }
 
-        // buy_it_now_price must be greater than the starting bid when set.
+        if let Some(res_price) = reserve_price {
+            if res_price < starting_bid {
+                panic_with_error!(&env, AuctionError::InvalidReservePrice);
+            }
+        }
+
+        // buy_it_now_price must be greater than the starting bid and reserve price when set.
         if let Some(bin_price) = buy_it_now_price {
             if bin_price <= starting_bid {
                 panic_with_error!(&env, AuctionError::InvalidBuyNowPrice);
+            }
+            if let Some(res_price) = reserve_price {
+                if bin_price < res_price {
+                    panic_with_error!(&env, AuctionError::InvalidBuyNowPrice);
+                }
             }
         }
 
@@ -146,6 +163,7 @@ impl AuctionContract {
             end_time,
             settled: false,
             buy_it_now_price,
+            reserve_price,
             bid_count: 0,
         };
 
@@ -168,6 +186,35 @@ impl AuctionContract {
 
     pub fn get_auction_count(env: Env) -> u32 {
         env.storage().instance().get(&COUNT_KEY).unwrap_or(0)
+    }
+
+    pub fn cancel_auction(env: Env, seller: Address, id: u32) -> Auction {
+        seller.require_auth();
+
+        let mut auctions = read_auctions(&env);
+        let mut auction = auctions
+            .get(id)
+            .unwrap_or_else(|| panic_with_error!(&env, AuctionError::AuctionMissing));
+
+        if auction.seller != seller {
+            panic_with_error!(&env, AuctionError::Unauthorized);
+        }
+
+        if auction.settled {
+            panic_with_error!(&env, AuctionError::AlreadySettled);
+        }
+
+        if auction.bid_count > 0 || auction.highest_bidder.is_some() {
+            panic_with_error!(&env, AuctionError::CannotCancelWithBids);
+        }
+
+        auction.settled = true;
+        auctions.set(id, auction.clone());
+        env.storage().instance().set(&AUCTIONS_KEY, &auctions);
+
+        env.events()
+            .publish((symbol_short!("cancel"), id), seller);
+        auction
     }
 
     pub fn place_bid(env: Env, bidder: Address, id: u32, amount: i128) -> Auction {
@@ -262,15 +309,39 @@ impl AuctionContract {
             panic_with_error!(&env, AuctionError::NoBids);
         }
 
-        // Transfer funds (with platform fee split).
-        settle_funds(&env, &auction);
+        // Check if Reserve Price was met (if set)
+        let reserve_met = match auction.reserve_price {
+            Some(res_price) => auction.highest_bid >= res_price,
+            None => true,
+        };
+
+        if reserve_met {
+            // Transfer funds to seller (with platform fee split)
+            settle_funds(&env, &auction);
+        } else {
+            // Reserve price not met: refund the highest bidder in full
+            let token_client = token::Client::new(&env, &auction.token);
+            if let Some(ref bidder) = auction.highest_bidder {
+                token_client.transfer(
+                    &env.current_contract_address(),
+                    bidder,
+                    &auction.highest_bid,
+                );
+            }
+        }
 
         auction.settled = true;
         auctions.set(id, auction.clone());
         env.storage().instance().set(&AUCTIONS_KEY, &auctions);
 
-        env.events()
-            .publish((symbol_short!("settled"), id), auction.highest_bidder.clone());
+        if reserve_met {
+            env.events()
+                .publish((symbol_short!("settled"), id), auction.highest_bidder.clone());
+        } else {
+            env.events()
+                .publish((symbol_short!("unmet"), id), auction.highest_bidder.clone());
+        }
+
         auction
     }
 }
