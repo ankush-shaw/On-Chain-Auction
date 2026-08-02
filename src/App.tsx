@@ -379,7 +379,7 @@ function App() {
             </div>
 
             {/* Right: Manager Panel wrapped in Stitch console card */}
-            <div className="w-full max-w-[440px] z-10">
+            <div className="w-full max-w-[480px] z-10">
               <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-2xl ring-1 ring-black/5 overflow-hidden dark:bg-slate-900 dark:border-slate-800 animate-glow-pulse">
                 <div className="bg-primary px-6 py-4 flex items-center gap-3 dark:bg-slate-950 border-b border-white/5">
                   <div className="w-9 h-9 bg-secondary-container/20 rounded-lg flex items-center justify-center">

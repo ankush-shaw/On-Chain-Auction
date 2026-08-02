@@ -86,15 +86,16 @@ export function ManagerPanel({ walletAddress, contractReady, networkLabel, onCon
           </label>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block">
-              <span className="text-label-sm font-semibold uppercase tracking-wide text-on-surface-variant dark:text-slate-400">Start (XLM)</span>
+              <span className="text-label-sm font-semibold uppercase tracking-wide text-on-surface-variant dark:text-slate-400">Starting Bid (XLM) *</span>
               <input
                 value={startingBidXlm}
                 onChange={(e) => setStartingBidXlm(e.target.value)}
                 required
                 inputMode="decimal"
+                placeholder="10"
                 className={inputClass}
               />
             </label>
@@ -102,12 +103,15 @@ export function ManagerPanel({ walletAddress, contractReady, networkLabel, onCon
 
           <div>
             <label className="block">
-              <span className="text-label-sm font-semibold uppercase tracking-wide text-on-surface-variant dark:text-slate-400">Reserve (XLM)</span>
+              <div className="flex items-center justify-between">
+                <span className="text-label-sm font-semibold uppercase tracking-wide text-on-surface-variant dark:text-slate-400">Reserve Price (XLM)</span>
+                <span className="text-[10px] font-medium text-on-surface-variant/70 uppercase tracking-wider">Optional</span>
+              </div>
               <input
                 value={reservePriceXlm}
                 onChange={(e) => setReservePriceXlm(e.target.value)}
                 inputMode="decimal"
-                placeholder="Optional"
+                placeholder="e.g. 50"
                 className={inputClass}
               />
             </label>
@@ -115,7 +119,7 @@ export function ManagerPanel({ walletAddress, contractReady, networkLabel, onCon
 
           <div>
             <label className="block">
-              <span className="text-label-sm font-semibold uppercase tracking-wide text-on-surface-variant dark:text-slate-400">Duration (H)</span>
+              <span className="text-label-sm font-semibold uppercase tracking-wide text-on-surface-variant dark:text-slate-400">Duration (Hours) *</span>
               <input
                 type="number"
                 min={1}
@@ -123,6 +127,7 @@ export function ManagerPanel({ walletAddress, contractReady, networkLabel, onCon
                 value={durationHours}
                 onChange={(e) => setDurationHours(Number(e.target.value))}
                 required
+                placeholder="24"
                 className={inputClass}
               />
             </label>
@@ -130,12 +135,15 @@ export function ManagerPanel({ walletAddress, contractReady, networkLabel, onCon
 
           <div>
             <label className="block">
-              <span className="text-label-sm font-semibold uppercase tracking-wide text-on-surface-variant dark:text-slate-400">Buy Now (XLM)</span>
+              <div className="flex items-center justify-between">
+                <span className="text-label-sm font-semibold uppercase tracking-wide text-on-surface-variant dark:text-slate-400">Buy It Now (XLM)</span>
+                <span className="text-[10px] font-medium text-on-surface-variant/70 uppercase tracking-wider">Optional</span>
+              </div>
               <input
                 value={buyItNowPriceXlm}
                 onChange={(e) => setBuyItNowPriceXlm(e.target.value)}
                 inputMode="decimal"
-                placeholder="Optional"
+                placeholder="e.g. 200"
                 className={inputClass}
               />
             </label>
