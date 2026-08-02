@@ -16,6 +16,7 @@ export function ManagerPanel({ walletAddress, contractReady, networkLabel, onCon
   const [startingBidXlm, setStartingBidXlm] = useState('10');
   const [durationHours, setDurationHours] = useState(24);
   const [buyItNowPriceXlm, setBuyItNowPriceXlm] = useState('');
+  const [reservePriceXlm, setReservePriceXlm] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,12 +36,14 @@ export function ManagerPanel({ walletAddress, contractReady, networkLabel, onCon
         startingBidXlm,
         durationHours,
         buyItNowPriceXlm: buyItNowPriceXlm.trim() || undefined,
+        reservePriceXlm: reservePriceXlm.trim() || undefined,
       });
       setTitle('');
       setDescription('');
       setStartingBidXlm('10');
       setDurationHours(24);
       setBuyItNowPriceXlm('');
+      setReservePriceXlm('');
     } catch (e: any) {
       setError(e.message || 'Could not list this project.');
     } finally {
@@ -83,10 +86,10 @@ export function ManagerPanel({ walletAddress, contractReady, networkLabel, onCon
           </label>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div>
             <label className="block">
-              <span className="text-label-sm font-semibold uppercase tracking-wide text-on-surface-variant dark:text-slate-400">Starting bid (XLM)</span>
+              <span className="text-label-sm font-semibold uppercase tracking-wide text-on-surface-variant dark:text-slate-400">Start (XLM)</span>
               <input
                 value={startingBidXlm}
                 onChange={(e) => setStartingBidXlm(e.target.value)}
@@ -99,7 +102,20 @@ export function ManagerPanel({ walletAddress, contractReady, networkLabel, onCon
 
           <div>
             <label className="block">
-              <span className="text-label-sm font-semibold uppercase tracking-wide text-on-surface-variant dark:text-slate-400">Duration (Hours)</span>
+              <span className="text-label-sm font-semibold uppercase tracking-wide text-on-surface-variant dark:text-slate-400">Reserve (XLM)</span>
+              <input
+                value={reservePriceXlm}
+                onChange={(e) => setReservePriceXlm(e.target.value)}
+                inputMode="decimal"
+                placeholder="Optional"
+                className={inputClass}
+              />
+            </label>
+          </div>
+
+          <div>
+            <label className="block">
+              <span className="text-label-sm font-semibold uppercase tracking-wide text-on-surface-variant dark:text-slate-400">Duration (H)</span>
               <input
                 type="number"
                 min={1}

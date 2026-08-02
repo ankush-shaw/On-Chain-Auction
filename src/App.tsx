@@ -17,6 +17,7 @@ import {
   CreateAuctionInput,
   StellarNetwork,
   WalletType,
+  cancelAuction,
   createAuction,
   getNetworkConfig,
   isContractConfigured,
@@ -189,6 +190,21 @@ function App() {
     if (updated) {
       setAuctions((current) => current.map((item) => (item.id === auctionId ? updated : item)));
       setSuccess(`Auction "${updated.title}" settled. Winning bid sent to seller.`);
+    }
+  };
+
+  const handleCancel = async (auctionId: number) => {
+    if (!contractReady) {
+      throw new Error(`On-chain cancellation requires a configured ${networkConfig.label} auction contract.`);
+    }
+    if (!wallet.address) {
+      await connect('freighter', selectedNetwork);
+      return;
+    }
+    const updated = await cancelAuction(auctionId, wallet.address, selectedNetwork);
+    if (updated) {
+      setAuctions((current) => current.map((item) => (item.id === auctionId ? updated : item)));
+      setSuccess(`Auction "${updated.title}" cancelled.`);
     }
   };
 
@@ -408,6 +424,7 @@ function App() {
                 contractReady={contractReady}
                 onSettle={handleSettle}
                 onBid={handleBid}
+                onCancel={handleCancel}
               />
             </motion.div>
           ) : (
@@ -481,6 +498,7 @@ function App() {
                             onConnect={() => setIsWalletModalOpen(true)}
                             onBid={handleBid}
                             onSettle={handleSettle}
+                            onCancel={handleCancel}
                             isWatched={isWatched(auction.id)}
                             onToggleWatch={toggleWatch}
                           />

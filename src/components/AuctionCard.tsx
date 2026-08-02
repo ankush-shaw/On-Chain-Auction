@@ -10,6 +10,7 @@ interface AuctionCardProps {
   onConnect: () => void;
   onBid: (auctionId: number, amountXlm: string) => Promise<void>;
   onSettle: (auctionId: number) => Promise<void>;
+  onCancel?: (auctionId: number) => Promise<void>;
   isWatched?: boolean;
   onToggleWatch?: (id: number) => void;
 }
@@ -20,11 +21,12 @@ export function AuctionCard({
   onConnect,
   onBid,
   onSettle,
+  onCancel,
   isWatched = false,
   onToggleWatch,
 }: AuctionCardProps) {
   const [bidAmount, setBidAmount] = useState('');
-  const [busy, setBusy] = useState<'bid' | 'settle' | null>(null);
+  const [busy, setBusy] = useState<'bid' | 'settle' | 'cancel' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showChart, setShowChart] = useState(false);
 
@@ -42,6 +44,13 @@ export function AuctionCard({
 
   const hasBuyNow = auction.buyItNowPrice && auction.buyItNowPrice !== '0' && !auction.settled;
   const buyNowFormatted = hasBuyNow ? formatStroops(auction.buyItNowPrice!) : null;
+
+  const hasReserve = auction.reservePrice && auction.reservePrice !== '0';
+  const reserveFormatted = hasReserve ? formatStroops(auction.reservePrice!) : null;
+  const reserveMet = hasReserve && auction.highestBid !== '0' && BigInt(auction.highestBid) >= BigInt(auction.reservePrice!);
+
+  const isSeller = walletAddress && walletAddress.toLowerCase() === auction.seller.toLowerCase();
+  const canCancel = isSeller && auction.status === 'live' && (auction.bidCount ?? 0) === 0 && !auction.settled && onCancel;
 
   const timeLabel = useMemo(() => {
     const seconds = auction.endTime - Math.floor(Date.now() / 1000);
@@ -180,13 +189,29 @@ export function AuctionCard({
           </span>
         </span>
         <span className="flex items-center gap-2">
+          {hasReserve && (
+            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${
+              auction.highestBid === '0'
+                ? 'bg-surface-container text-on-surface-variant border border-outline-variant dark:bg-slate-800 dark:border-slate-700'
+                : reserveMet
+                  ? 'bg-success-green/10 text-success-green border border-success-green/30'
+                  : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30'
+            }`}>
+              <span className="material-symbols-outlined" style={{ fontSize: '12px' }}>shield</span>
+              {auction.highestBid === '0'
+                ? `Reserve: ${reserveFormatted} XLM`
+                : reserveMet
+                  ? 'Reserve Met'
+                  : 'Reserve Unmet'}
+            </span>
+          )}
           {auction.bidCount != null && auction.bidCount > 0 && (
             <span className="flex items-center gap-1 text-secondary font-semibold">
               <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>how_to_vote</span>
               {auction.bidCount} bid{auction.bidCount !== 1 ? 's' : ''}
             </span>
           )}
-          <span className="flex items-center gap-1.5 text-primary font-semibold">
+          <span className="flex items-center gap-1.5 text-primary font-semibold dark:text-slate-300">
             <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>schedule</span>
             {timeLabel}
           </span>
@@ -254,6 +279,30 @@ export function AuctionCard({
             >
               <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>shopping_cart</span>
               Buy It Now — {buyNowFormatted} XLM
+            </button>
+          )}
+
+          {/* Seller Cancel Listing Button (only if 0 bids placed) */}
+          {canCancel && (
+            <button
+              onClick={async () => {
+                setBusy('cancel');
+                setError(null);
+                try {
+                  await onCancel(auction.id);
+                } catch (e: any) {
+                  setError(e.message || 'Cancel listing failed.');
+                } finally {
+                  setBusy(null);
+                }
+              }}
+              disabled={busy !== null}
+              className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-error/30 bg-error-container/10 px-4 py-2 text-body-sm font-semibold text-error hover:bg-error-container/20 transition-all stable-button mt-1"
+            >
+              {busy === 'cancel' ? <Loader2 className="animate-spin" size={14} /> : (
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>block</span>
+              )}
+              Cancel Listing
             </button>
           )}
           </>

@@ -14,6 +14,7 @@ interface UserDashboardProps {
   contractReady: boolean;
   onSettle: (auctionId: number) => Promise<void>;
   onBid: (auctionId: number, amountXlm: string) => Promise<void>;
+  onCancel?: (auctionId: number) => Promise<void>;
 }
 
 // ── Stat tile ──────────────────────────────────────────────────────────────
@@ -107,10 +108,12 @@ function ListingCard({
   auction,
   walletAddress,
   onSettle,
+  onCancel,
 }: {
   auction: AuctionListing;
   walletAddress: string;
   onSettle: (id: number) => Promise<void>;
+  onCancel?: (id: number) => Promise<void>;
 }) {
   const [busy, setBusy] = useState(false);
   const canSettle =
@@ -119,6 +122,12 @@ function ListingCard({
     auction.highestBidder !== null &&
     auction.highestBid !== '0' &&
     !auction.isPreview;
+
+  const canCancel =
+    !auction.settled &&
+    auction.status === 'live' &&
+    (auction.bidCount ?? 0) === 0 &&
+    onCancel;
 
   return (
     <motion.article
@@ -167,10 +176,26 @@ function ListingCard({
         </button>
       )}
 
+      {canCancel && (
+        <button
+          onClick={async () => {
+            setBusy(true);
+            try { await onCancel(auction.id); } finally { setBusy(false); }
+          }}
+          disabled={busy}
+          className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-error/30 bg-error-container/10 px-4 py-2 text-body-sm font-semibold text-error hover:bg-error-container/20 transition-all stable-button text-xs"
+        >
+          {busy ? <Loader2 size={14} className="animate-spin" /> : (
+            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>block</span>
+          )}
+          Cancel Listing
+        </button>
+      )}
+
       {auction.settled && (
         <div className="flex items-center gap-2 rounded-lg border border-success-green/30 bg-success-green/10 px-3.5 py-2.5 text-label-sm text-success-green font-semibold">
           <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>check_circle</span>
-          Funds released to your wallet address.
+          Auction closed / settled.
         </div>
       )}
     </motion.article>
@@ -191,7 +216,7 @@ function EmptyState({ icon, title, body }: { icon: string; title: string; body: 
 }
 
 // ── Main Dashboard ─────────────────────────────────────────────────────────
-export function UserDashboard({ auctions, walletAddress, contractReady, onSettle, onBid }: UserDashboardProps) {
+export function UserDashboard({ auctions, walletAddress, contractReady, onSettle, onBid, onCancel }: UserDashboardProps) {
   const [activeTab, setActiveTab] = useState<DashTab>('bids');
   const { myBids, myListings, dashStats } = useDashboard(auctions, walletAddress);
 
@@ -326,6 +351,7 @@ export function UserDashboard({ auctions, walletAddress, contractReady, onSettle
                       auction={auction}
                       walletAddress={walletAddress}
                       onSettle={onSettle}
+                      onCancel={onCancel}
                     />
                   ))}
                 </AnimatePresence>
