@@ -6,6 +6,7 @@ import { ManagerPanel } from './components/ManagerPanel';
 import { UserDashboard } from './components/UserDashboard';
 import { WalletConnectModal } from './components/WalletConnectModal';
 import { Logo } from './components/Logo';
+import { XlmPriceTicker } from './components/XlmPriceTicker';
 import { ExplorerStats } from './components/ExplorerStats';
 import { ExplorerToolbar, StatusFilterType } from './components/ExplorerToolbar';
 import { useWallet } from './hooks/useWallet';
@@ -258,6 +259,7 @@ function App() {
 
           {/* Right controls */}
           <div className="flex items-center gap-3">
+            <XlmPriceTicker />
             {/* Network toggle pill */}
             <div className="hidden sm:flex items-center gap-1 rounded-full border border-white/20 bg-primary-container px-2 py-1 dark:bg-slate-900/60 dark:border-slate-800">
               <button
