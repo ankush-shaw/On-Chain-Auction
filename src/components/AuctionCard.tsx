@@ -3,6 +3,7 @@ import { BarChart2, ChevronDown, ChevronUp, Loader2, Star } from 'lucide-react';
 import type { AuctionListing } from '../types';
 import { formatStroops } from '../services/soroban';
 import { BidPriceChart } from './BidPriceChart';
+import { useXlmPrice } from '../hooks/useXlmPrice';
 
 interface AuctionCardProps {
   auction: AuctionListing;
@@ -11,6 +12,7 @@ interface AuctionCardProps {
   onBid: (auctionId: number, amountXlm: string) => Promise<void>;
   onSettle: (auctionId: number) => Promise<void>;
   onCancel?: (auctionId: number) => Promise<void>;
+  onOpenBidHistory?: (auction: AuctionListing) => void;
   isWatched?: boolean;
   onToggleWatch?: (id: number) => void;
 }
@@ -22,6 +24,7 @@ export function AuctionCard({
   onBid,
   onSettle,
   onCancel,
+  onOpenBidHistory,
   isWatched = false,
   onToggleWatch,
 }: AuctionCardProps) {
@@ -29,15 +32,15 @@ export function AuctionCard({
   const [busy, setBusy] = useState<'bid' | 'settle' | 'cancel' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showChart, setShowChart] = useState(false);
+  const { formatUsd } = useXlmPrice();
 
   const currentPrice = auction.highestBid !== '0' ? auction.highestBid : auction.startingBid;
+  const currentPriceFormatted = formatStroops(currentPrice);
   const minimumBid = useMemo(() => {
     if (auction.highestBid === '0') {
-      // No bids yet – must meet starting bid.
       return formatStroops(BigInt(auction.startingBid));
     }
     const hb = BigInt(auction.highestBid);
-    // 5% increment, rounded up: hb + ceil(hb * 500 / 10000)
     const increment = (hb * 500n + 9999n) / 10000n;
     return formatStroops(hb + increment);
   }, [auction.highestBid, auction.startingBid]);
@@ -166,16 +169,19 @@ export function AuctionCard({
       <div className={`mx-5 grid ${hasBuyNow ? 'grid-cols-3' : 'grid-cols-2'} gap-3 border-t border-outline-variant pt-4`}>
         <div className="bg-surface-container rounded-lg px-3 py-2.5">
           <p className="text-label-sm text-on-surface-variant uppercase tracking-wide">Current Bid</p>
-          <p className="mt-0.5 text-body-md font-bold text-primary">{formatStroops(currentPrice)} <span className="text-label-sm font-semibold text-on-surface-variant">XLM</span></p>
+          <p className="mt-0.5 text-body-md font-bold text-primary">{currentPriceFormatted} <span className="text-label-sm font-semibold text-on-surface-variant">XLM</span></p>
+          <p className="text-[11px] font-medium text-on-surface-variant/70 dark:text-slate-400">~{formatUsd(currentPriceFormatted)}</p>
         </div>
         <div className="bg-surface-container rounded-lg px-3 py-2.5">
           <p className="text-label-sm text-on-surface-variant uppercase tracking-wide">Next Min. (+5%)</p>
           <p className="mt-0.5 text-body-md font-bold text-primary">{minimumBid} <span className="text-label-sm font-semibold text-on-surface-variant">XLM</span></p>
+          <p className="text-[11px] font-medium text-on-surface-variant/70 dark:text-slate-400">~{formatUsd(minimumBid)}</p>
         </div>
         {hasBuyNow && (
           <div className="bg-secondary-container/15 border border-secondary/20 rounded-lg px-3 py-2.5">
             <p className="text-label-sm text-secondary uppercase tracking-wide">Buy It Now</p>
             <p className="mt-0.5 text-body-md font-bold text-secondary">{buyNowFormatted} <span className="text-label-sm font-semibold text-on-surface-variant">XLM</span></p>
+            <p className="text-[11px] font-medium text-secondary/80">~{formatUsd(buyNowFormatted!)}</p>
           </div>
         )}
       </div>
