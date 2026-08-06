@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { X, Trophy, History, ExternalLink, ShieldCheck } from 'lucide-react';
 import type { AuctionListing, BidRecord } from '../types';
 import { formatStroops } from '../services/soroban';
@@ -35,18 +36,27 @@ export function BidHistoryModal({ isOpen, auction, currentUserAddress, onClose }
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen || !auction) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
-      />
+    <AnimatePresence>
+      {isOpen && auction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm"
+            onClick={onClose}
+          />
 
-      {/* Modal Dialog */}
-      <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 shadow-2xl transition-all dark:border-slate-800 dark:bg-slate-900 animate-scale-up">
+          {/* Modal Dialog */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            transition={{ duration: 0.2 }}
+            className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 shadow-2xl transition-all dark:border-slate-800 dark:bg-slate-900"
+          >
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-outline-variant dark:border-slate-800">
           <div className="flex items-center gap-3">
@@ -163,7 +173,9 @@ export function BidHistoryModal({ isOpen, auction, currentUserAddress, onClose }
             Close
           </button>
         </div>
-      </div>
+      </motion.div>
     </div>
+      )}
+    </AnimatePresence>
   );
 }
