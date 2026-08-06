@@ -5,8 +5,10 @@ import type { AuctionListing } from '../types';
 import { useDashboard } from '../hooks/useDashboard';
 import { BidStatusBadge, deriveBidStatus } from './BidStatusBadge';
 import { formatStroops } from '../services/soroban';
+import { getUserActivities } from '../services/userActivity';
+import { ActivityHistoryTable } from './ActivityHistoryTable';
 
-type DashTab = 'bids' | 'listings';
+type DashTab = 'bids' | 'listings' | 'activity';
 
 interface UserDashboardProps {
   auctions: AuctionListing[];
@@ -15,6 +17,7 @@ interface UserDashboardProps {
   onSettle: (auctionId: number) => Promise<void>;
   onBid: (auctionId: number, amountXlm: string) => Promise<void>;
   onCancel?: (auctionId: number) => Promise<void>;
+  selectedNetwork?: string;
 }
 
 // ── Stat tile ──────────────────────────────────────────────────────────────
@@ -216,9 +219,10 @@ function EmptyState({ icon, title, body }: { icon: string; title: string; body: 
 }
 
 // ── Main Dashboard ─────────────────────────────────────────────────────────
-export function UserDashboard({ auctions, walletAddress, contractReady, onSettle, onBid, onCancel }: UserDashboardProps) {
+export function UserDashboard({ auctions, walletAddress, contractReady, onSettle, onBid, onCancel, selectedNetwork = 'testnet' }: UserDashboardProps) {
   const [activeTab, setActiveTab] = useState<DashTab>('bids');
   const { myBids, myListings, dashStats } = useDashboard(auctions, walletAddress);
+  const activities = useMemo(() => getUserActivities(walletAddress), [walletAddress, auctions]);
 
   // Count listings that need settlement (ended, has winning bid, not yet settled)
   const needsSettlement = useMemo(
@@ -231,6 +235,7 @@ export function UserDashboard({ auctions, walletAddress, contractReady, onSettle
   const tabs: { id: DashTab; label: string; count: number; badge?: number; icon: string }[] = [
     { id: 'bids', label: 'My Bids', count: myBids.length, icon: 'gavel' },
     { id: 'listings', label: 'My Listings', count: myListings.length, badge: needsSettlement, icon: 'list_alt' },
+    { id: 'activity', label: 'Activity & Tx History', count: activities.length, icon: 'receipt_long' },
   ];
 
   return (
@@ -357,6 +362,18 @@ export function UserDashboard({ auctions, walletAddress, contractReady, onSettle
                 </AnimatePresence>
               </div>
             )}
+          </motion.div>
+        )}
+
+        {activeTab === 'activity' && (
+          <motion.div
+            key="activity"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.18 }}
+          >
+            <ActivityHistoryTable activities={activities} explorerNetwork={selectedNetwork} />
           </motion.div>
         )}
       </AnimatePresence>
