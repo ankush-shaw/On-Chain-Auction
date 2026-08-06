@@ -155,8 +155,6 @@ function App() {
       });
   }, [auctions, searchQuery, statusFilter, sortBy, showWatchedOnly, watchedIds]);
 
-import { recordUserActivity } from './services/userActivity';
-
   const handleCreate = async (input: CreateAuctionInput) => {
     if (!contractReady) {
       throw new Error(`Configure the ${networkConfig.label} auction contract before listing projects.`);
