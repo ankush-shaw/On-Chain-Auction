@@ -1,5 +1,6 @@
-import { ExternalLink, Gavel, PlusCircle, CheckCircle, Ban, History } from 'lucide-react';
-import type { ActivityRecord } from '../services/userActivity';
+import { useState } from 'react';
+import { ExternalLink, Gavel, PlusCircle, CheckCircle, Ban, History, Filter } from 'lucide-react';
+import type { ActivityRecord, ActivityType } from '../services/userActivity';
 import { useXlmPrice } from '../hooks/useXlmPrice';
 
 interface ActivityHistoryTableProps {
@@ -9,6 +10,9 @@ interface ActivityHistoryTableProps {
 
 export function ActivityHistoryTable({ activities, explorerNetwork = 'testnet' }: ActivityHistoryTableProps) {
   const { formatUsd } = useXlmPrice();
+  const [filterType, setFilterType] = useState<ActivityType | 'all'>('all');
+
+  const filteredActivities = activities.filter((act) => filterType === 'all' || act.type === filterType);
 
   if (activities.length === 0) {
     return (
@@ -23,19 +27,42 @@ export function ActivityHistoryTable({ activities, explorerNetwork = 'testnet' }
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-outline-variant bg-surface-container-lowest dark:bg-slate-900 dark:border-slate-800">
-      <table className="w-full text-left border-collapse text-body-sm">
-        <thead>
-          <tr className="border-b border-outline-variant/60 bg-surface-container-low dark:bg-slate-950 dark:border-slate-800 text-label-sm text-on-surface-variant uppercase tracking-wider">
-            <th className="px-4 py-3">Action</th>
-            <th className="px-4 py-3">Auction</th>
-            <th className="px-4 py-3">Amount</th>
-            <th className="px-4 py-3">Timestamp</th>
-            <th className="px-4 py-3">Tx Hash</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-outline-variant/30 dark:divide-slate-800/60">
-          {activities.map((act) => {
+    <div className="space-y-3">
+      {/* Activity Filter Bar */}
+      <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1">
+        <div className="flex items-center gap-1.5 text-label-sm font-semibold text-on-surface-variant dark:text-slate-400">
+          <Filter size={14} /> Filter:
+        </div>
+        <div className="flex gap-1.5">
+          {(['all', 'bid', 'create', 'settle', 'cancel'] as const).map((type) => (
+            <button
+              key={type}
+              onClick={() => setFilterType(type)}
+              className={`rounded-lg px-2.5 py-1 text-xs font-semibold capitalize transition-all ${
+                filterType === type
+                  ? 'bg-primary text-on-primary dark:bg-slate-700 dark:text-slate-100 shadow-sm'
+                  : 'bg-surface-container text-on-surface-variant hover:text-on-surface dark:bg-slate-900 dark:text-slate-400'
+              }`}
+            >
+              {type === 'all' ? 'All Transactions' : type}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="overflow-x-auto rounded-xl border border-outline-variant bg-surface-container-lowest dark:bg-slate-900 dark:border-slate-800">
+        <table className="w-full text-left border-collapse text-body-sm">
+          <thead>
+            <tr className="border-b border-outline-variant/60 bg-surface-container-low dark:bg-slate-950 dark:border-slate-800 text-label-sm text-on-surface-variant uppercase tracking-wider">
+              <th className="px-4 py-3">Action</th>
+              <th className="px-4 py-3">Auction</th>
+              <th className="px-4 py-3">Amount</th>
+              <th className="px-4 py-3">Timestamp</th>
+              <th className="px-4 py-3">Tx Hash</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-outline-variant/30 dark:divide-slate-800/60">
+            {filteredActivities.map((act) => {
             const icon =
               act.type === 'bid' ? <Gavel size={14} className="text-secondary" /> :
               act.type === 'create' ? <PlusCircle size={14} className="text-primary dark:text-slate-200" /> :
@@ -100,5 +127,6 @@ export function ActivityHistoryTable({ activities, explorerNetwork = 'testnet' }
         </tbody>
       </table>
     </div>
+  </div>
   );
 }
