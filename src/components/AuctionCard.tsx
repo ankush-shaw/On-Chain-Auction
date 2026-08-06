@@ -212,10 +212,14 @@ export function AuctionCard({
             </span>
           )}
           {auction.bidCount != null && auction.bidCount > 0 && (
-            <span className="flex items-center gap-1 text-secondary font-semibold">
+            <button
+              onClick={() => onOpenBidHistory && onOpenBidHistory(auction)}
+              className="flex items-center gap-1 text-secondary font-semibold hover:underline cursor-pointer"
+              title="View full bid history leaderboard"
+            >
               <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>how_to_vote</span>
               {auction.bidCount} bid{auction.bidCount !== 1 ? 's' : ''}
-            </span>
+            </button>
           )}
           <span className="flex items-center gap-1.5 text-primary font-semibold dark:text-slate-300">
             <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>schedule</span>
