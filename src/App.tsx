@@ -13,6 +13,7 @@ import { ExplorerToolbar, StatusFilterType } from './components/ExplorerToolbar'
 import { useWallet } from './hooks/useWallet';
 import { useTheme } from './hooks/useTheme';
 import { useWatchlist } from './hooks/useWatchlist';
+import { recordUserActivity } from './services/userActivity';
 import { demoAuctions } from './data/demoAuctions';
 import type { AuctionListing } from './types';
 import {
@@ -154,6 +155,8 @@ function App() {
       });
   }, [auctions, searchQuery, statusFilter, sortBy, showWatchedOnly, watchedIds]);
 
+import { recordUserActivity } from './services/userActivity';
+
   const handleCreate = async (input: CreateAuctionInput) => {
     if (!contractReady) {
       throw new Error(`Configure the ${networkConfig.label} auction contract before listing projects.`);
@@ -162,6 +165,16 @@ function App() {
     if (created) {
       setAuctions((current) => [created, ...current.filter((item) => item.id !== created.id)]);
       setSuccess(`Listed "${created.title}" on-chain.`);
+      if (wallet.address) {
+        recordUserActivity({
+          userAddress: wallet.address,
+          type: 'create',
+          auctionId: created.id,
+          auctionTitle: created.title,
+          amountXlm: input.startingBidXlm,
+          status: 'confirmed',
+        });
+      }
     }
     await refreshAuctions();
   };
@@ -178,6 +191,14 @@ function App() {
     if (updated) {
       setAuctions((current) => current.map((item) => (item.id === auctionId ? updated : item)));
       setSuccess(`Bid placed on "${updated.title}".`);
+      recordUserActivity({
+        userAddress: wallet.address,
+        type: 'bid',
+        auctionId: updated.id,
+        auctionTitle: updated.title,
+        amountXlm: amountXlm,
+        status: 'confirmed',
+      });
     }
   };
 
@@ -193,6 +214,13 @@ function App() {
     if (updated) {
       setAuctions((current) => current.map((item) => (item.id === auctionId ? updated : item)));
       setSuccess(`Auction "${updated.title}" settled. Winning bid sent to seller.`);
+      recordUserActivity({
+        userAddress: wallet.address,
+        type: 'settle',
+        auctionId: updated.id,
+        auctionTitle: updated.title,
+        status: 'confirmed',
+      });
     }
   };
 
@@ -208,6 +236,13 @@ function App() {
     if (updated) {
       setAuctions((current) => current.map((item) => (item.id === auctionId ? updated : item)));
       setSuccess(`Auction "${updated.title}" cancelled.`);
+      recordUserActivity({
+        userAddress: wallet.address,
+        type: 'cancel',
+        auctionId: updated.id,
+        auctionTitle: updated.title,
+        status: 'confirmed',
+      });
     }
   };
 
