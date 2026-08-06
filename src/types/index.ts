@@ -28,3 +28,13 @@ export interface AuctionListing {
   /** Number of bids placed on this auction. */
   bidCount?: number;
 }
+
+export interface BidRecord {
+  id: string;
+  auctionId: number;
+  bidder: string;
+  amountStroops: string;
+  timestamp: number;
+  txHash?: string;
+  isBuyItNow?: boolean;
+}
