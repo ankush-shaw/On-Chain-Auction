@@ -5,6 +5,7 @@ import { AuctionCard } from './components/AuctionCard';
 import { ManagerPanel } from './components/ManagerPanel';
 import { UserDashboard } from './components/UserDashboard';
 import { WalletConnectModal } from './components/WalletConnectModal';
+import { BidHistoryModal } from './components/BidHistoryModal';
 import { Logo } from './components/Logo';
 import { XlmPriceTicker } from './components/XlmPriceTicker';
 import { ExplorerStats } from './components/ExplorerStats';
@@ -51,6 +52,7 @@ function App() {
   const [sortBy, setSortBy] = useState<string>('ending_soon');
   const [showWatchedOnly, setShowWatchedOnly] = useState(false);
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
+  const [historyModalAuction, setHistoryModalAuction] = useState<AuctionListing | null>(null);
 
   const { watchedIds, toggleWatch, isWatched } = useWatchlist(wallet.address);
 
@@ -501,6 +503,7 @@ function App() {
                             onBid={handleBid}
                             onSettle={handleSettle}
                             onCancel={handleCancel}
+                            onOpenBidHistory={(a) => setHistoryModalAuction(a)}
                             isWatched={isWatched(auction.id)}
                             onToggleWatch={toggleWatch}
                           />
@@ -620,6 +623,13 @@ function App() {
         onConnect={(type) => connect(type, selectedNetwork)}
         isConnecting={wallet.isConnecting}
         selectedNetwork={selectedNetwork}
+      />
+
+      <BidHistoryModal
+        isOpen={!!historyModalAuction}
+        auction={historyModalAuction}
+        currentUserAddress={wallet.address}
+        onClose={() => setHistoryModalAuction(null)}
       />
     </div>
   );
